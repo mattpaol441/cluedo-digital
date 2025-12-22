@@ -1,4 +1,4 @@
-import type { Card, SuspectID } from './types';
+import type { Card, SuspectID } from '../types/types';
 
 // --- 1. LISTE CARTE (Source of Truth) ---
 

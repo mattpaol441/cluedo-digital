@@ -28,5 +28,5 @@
       "@cluedo-digital/shared": ["./shared/src/index.ts"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "shared/src/types/types.ts", "shared/src/constants/constants.ts"]
 }
