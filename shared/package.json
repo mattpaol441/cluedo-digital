@@ -1,0 +1,16 @@
+{
+  "name": "@cluedo-digital/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint src"
+  },
+  "peerDependencies": {
+    "boardgame.io": "^0.50.0" 
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
