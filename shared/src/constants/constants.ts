@@ -47,25 +47,25 @@ export const CHARACTER_COLORS: Record<SuspectID, string> = {
   green:    '#008000', // Verde
 };
 
-// Posizioni di partenza (Indici ipotetici della griglia 24x25)
-// Nota: Questi andranno affinati quando faremo la mappa esatta
-export const STARTING_POSITIONS: Record<SuspectID, number> = {
-  scarlet:  17,  // In alto a dx (esempio)
-  mustard:  490, // In basso a dx
-  orchid:   590, // In basso a sx
-  green:    580, // In basso a sx
-  peacock:  150, // A sinistra
-  plum:     50,  // A sinistra in alto
-};
+// // Posizioni di partenza (Indici ipotetici della griglia 24x25)
+// // Nota: Questi andranno affinati quando faremo la mappa esatta
+// export const STARTING_POSITIONS: Record<SuspectID, number> = {
+//   scarlet:  17,  // In alto a dx (esempio)
+//   mustard:  490, // In basso a dx
+//   orchid:   590, // In basso a sx
+//   green:    580, // In basso a sx
+//   peacock:  150, // A sinistra
+//   plum:     50,  // A sinistra in alto
+// };
 
-// --- 3. DATI DELLA GRIGLIA ---
+// // --- 3. DATI DELLA GRIGLIA ---
 
-export const BOARD_WIDTH = 24;
-export const BOARD_HEIGHT = 25;
+// export const BOARD_WIDTH = 24;
+// export const BOARD_HEIGHT = 25;
 
-// Qui in futuro metteremo l'array che definisce muri e stanze
-// Per ora lo lasciamo vuoto o mettiamo un placeholder
-export const MAP_LAYOUT: number[] = Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0);
+// // Qui in futuro metteremo l'array che definisce muri e stanze
+// // Per ora lo lasciamo vuoto o mettiamo un placeholder
+// export const MAP_LAYOUT: number[] = Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0);
 
 
 

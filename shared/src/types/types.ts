@@ -118,29 +118,29 @@ export type NotebookState = Record<string, boolean>;
 
 // --- 6. Map Definition ---
 
-// I tipi di terreno possibili sulla mappa
-export type CellType = 
-  | 'FLOOR'  // Corridoio camminabile
-  | 'WALL'   // Muro/Ostacolo
-  | 'ROOM'   // Interno stanza (decorativo)
-  | 'DOOR'   // Passaggio Corridoio <-> Stanza
-  | 'START' // Casella di partenza
-  | 'CENTER'; // La casella speciale per l'Accusa Finale.
+// // I tipi di terreno possibili sulla mappa
+// export type CellType = 
+//   | 'FLOOR'  // Corridoio camminabile
+//   | 'WALL'   // Muro/Ostacolo
+//   | 'ROOM'   // Interno stanza (decorativo)
+//   | 'DOOR'   // Passaggio Corridoio <-> Stanza
+//   | 'START' // Casella di partenza
+//   | 'CENTER'; // La casella speciale per l'Accusa Finale.
 
-// Definizione di una singola casella della mappa (Dato Statico)
-export interface CellDefinition {
-  type: CellType;
+// // Definizione di una singola casella della mappa (Dato Statico)
+// export interface CellDefinition {
+//   type: CellType;
   
-  // Se è una PORTA, a quale stanza porta? (Es. "kitchen")
-  doorTo?: RoomID; 
+//   // Se è una PORTA, a quale stanza porta? (Es. "kitchen")
+//   doorTo?: RoomID; 
   
-  // Se è una PARTENZA, di chi è? (Es. "mustard")
-  startFor?: string;
-}
+//   // Se è una PARTENZA, di chi è? (Es. "mustard")
+//   startFor?: string;
+// }
 
-// Il tabellone dovrebbe semplicemente essere  un Array di CellDefinition lungo 576 elementi (24x24 o 24x25)
+// // Il tabellone dovrebbe semplicemente essere  un Array di CellDefinition lungo 576 elementi (24x24 o 24x25)
 
-// Mancano i passaggi segreti, li aggiungiamo dopo se serve
+// // Mancano i passaggi segreti, li aggiungiamo dopo se serve
 
 
 // --- 7. DEFINIZIONE FASI DI GIOCO ---
