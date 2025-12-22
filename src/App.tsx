@@ -31,3 +31,42 @@ function App() {
 }
 
 export default App;
+
+
+
+// // TEST per vedere il taccuino in vite
+
+// import { Notebook } from './components/Notebook';
+// import type { Card } from './game/types';
+
+// // --- DATI FALSI PER IL TEST ---
+// const FINTA_MANO: Card[] = [
+//   { id: 'dagger', name: 'Pugnale', type: 'WEAPON' },
+//   { id: 'kitchen', name: 'Cucina', type: 'ROOM' },
+// ];
+
+// const FINTE_CARTE_TAVOLO: Card[] = [
+//   { id: 'hall', name: 'Ingresso', type: 'ROOM' },
+// ];
+
+// function App() {
+//   return (
+//     <div className="min-h-screen bg-slate-800 flex flex-col items-center justify-center p-8">
+      
+//       <h1 className="text-white text-2xl font-bold mb-6">Test Taccuino (Vite)</h1>
+      
+//       {/* Contenitore Sidebar */}
+//       <div className="w-[350px] h-[600px] shadow-2xl rounded-xl overflow-hidden border-4 border-slate-600 bg-white">
+        
+//         <Notebook 
+//           myHand={FINTA_MANO} 
+//           tableCards={FINTE_CARTE_TAVOLO} 
+//         />
+        
+//       </div>
+
+//     </div>
+//   );
+// }
+
+// export default App;
