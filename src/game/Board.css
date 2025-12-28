@@ -1,0 +1,48 @@
+.board-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px; /* O la dimensione che vuoi */
+  margin: 0 auto;
+  /* MANTENERE L'ASPECT RATIO È FONDAMENTALE */
+  /* Se la tua matrice è 25x25 (quadrata), l'aspect-ratio deve essere 1/1 */
+  aspect-ratio: 1 / 1; 
+}
+
+.board-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Assicura che l'immagine non si deformi */
+  display: block;
+}
+
+.board-grid {
+  position: absolute;
+  top: 1.2%;  
+  left: 1.1%;
+
+  width: 97.8%; 
+  height: 97.6%;
+  
+  /* LA MAGIA DI CSS GRID */
+  display: grid;
+  /* Crea esattamente 25 colonne e 25 righe uguali */
+  grid-template-columns: repeat(25, 1fr);
+  grid-template-rows: repeat(25, 1fr);
+}
+
+.player-token {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  border: 2px solid white;
+  align-self: center;
+  justify-self: center;
+  z-index: 10; /* Assicurati che stia sopra a tutto */
+  
+  /* Per centrare il testo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}

@@ -1,34 +1,70 @@
-// Game.ts definisce le regole (la matematica del gioco)
 import type { Game } from 'boardgame.io';
-import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js'; // Importiamo questo helper
+import  type { 
+    CluedoGameState, 
+    SuspectCard, 
+    WeaponCard, 
+    RoomCard, 
+    PlayerState 
+} from '@cluedo-digital/shared';
 
-export interface CluedoGameState {
-  cells: (string | null)[];
-}
+// --- DATI FINTI PER IL SETUP INIZIALE ---
+// Servono solo per far contento TypeScript finché non scriveremo la logica del mazzo
+const DUMMY_SUSPECT: SuspectCard = { type: 'SUSPECT', id: 'mustard', name: 'Col. Mustard' };
+const DUMMY_WEAPON: WeaponCard = { type: 'WEAPON', id: 'dagger', name: 'Pugnale' };
+const DUMMY_ROOM: RoomCard = { type: 'ROOM', id: 'kitchen', name: 'Cucina' };
 
 export const CluedoGame: Game<CluedoGameState> = {
   name: 'cluedo-digital',
 
-  setup: () => ({
-    cells: Array(9).fill(null),
-  }),
+  // SETUP: Deve ritornare un oggetto che corrisponde ESATTAMENTE a CluedoGameState
+  setup: (ctx) => {
+    
+    // Inizializziamo i giocatori vuoti in base al numero di player nella lobby
+    const initialPlayers: Record<string, PlayerState> = {};
+    
+    // ctx.numPlayers ci dice quanti giocatori ci sono (es. 3)
+    // Creiamo lo stato iniziale per "0", "1", "2"...
+    for (let i = 0; i <  Number(ctx.numPlayers); i++) {
+        const playerId = i.toString();
+        initialPlayers[playerId] = {
+            id: playerId,
+            name: `Player ${i + 1}`,
+            color: '#000000', // Colore temporaneo
+            character: 'mustard', // Personaggio temporaneo
+            position: { x: 0, y: 0 }, // Posizione temporanea
+            currentRoom: undefined,
+            hand: [],
+            notebook: {},
+            isEliminated: false
+        };
+    }
+
+    return {
+      // ERRORE RISOLTO: Ora passiamo un oggetto, non un array
+      secretEnvelope: {
+        suspect: DUMMY_SUSPECT,
+        weapon: DUMMY_WEAPON,
+        room: DUMMY_ROOM
+      },
+      
+      tableCards: [], // Array vuoto di Card[] va bene
+      
+      players: initialPlayers, // Passiamo i giocatori inizializzati
+      
+      diceRoll: [0, 0],
+      currentSuggestion: undefined,
+      isMoved: false
+    };
+  },
 
   moves: {
-    // Aggiungiamo 'events' agli argomenti della mossa
-    clickCell: ({ G, playerID, events }, id: number) => {
-      // Regola: Non puoi sovrascrivere una casella già piena
-      if (G.cells[id] !== null) {
-        return INVALID_MOVE;
-      }
-
-      // 1. Applica la modifica allo stato
-      G.cells[id] = playerID;
-
-      // 2. PASSA IL TURNO AUTOMATICAMENTE
-      events.endTurn(); 
+    clickCell: ({ G }, x, y) => {
+      console.log('Click ricevuto:', x, y);
     },
   },
-  
-  minPlayers: 3,
-  maxPlayers: 6,
+
+  turn: {
+    minMoves: 1,
+    maxMoves: 1,
+  },
 };

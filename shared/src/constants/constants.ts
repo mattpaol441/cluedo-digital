@@ -1,8 +1,8 @@
-import type { Card, SuspectID } from '../types/types';
+import type { Card, SuspectCard, WeaponCard, RoomCard, SuspectID } from '../types/models';
 
 // --- 1. LISTE CARTE (Source of Truth) ---
 
-export const SUSPECTS: Card[] = [
+export const SUSPECTS: SuspectCard[] = [
   { id: 'scarlet',  name: 'Miss Scarlet',       type: 'SUSPECT' },
   { id: 'peacock',  name: 'Contessa Peacock',   type: 'SUSPECT' },
   { id: 'plum',     name: 'Professor Plum',     type: 'SUSPECT' },
@@ -11,7 +11,7 @@ export const SUSPECTS: Card[] = [
   { id: 'green',    name: 'Reverendo Green',    type: 'SUSPECT' },
 ];
 
-export const WEAPONS: Card[] = [
+export const WEAPONS: WeaponCard[] = [
   { id: 'candlestick', name: 'Candeliere',      type: 'WEAPON' },
   { id: 'dagger',      name: 'Pugnale',         type: 'WEAPON' },
   { id: 'lead_pipe',   name: 'Tubo di piombo',  type: 'WEAPON' },
@@ -20,7 +20,7 @@ export const WEAPONS: Card[] = [
   { id: 'wrench',      name: 'Chiave inglese',  type: 'WEAPON' },
 ];
 
-export const ROOMS: Card[] = [
+export const ROOMS: RoomCard[] = [
   { id: 'ballroom',      name: 'Sala da ballo',    type: 'ROOM' },
   { id: 'billiard_room', name: 'Sala da biliardo', type: 'ROOM' },
   { id: 'conservatory',  name: 'Serra',            type: 'ROOM' },
@@ -33,7 +33,7 @@ export const ROOMS: Card[] = [
 ];
 
 // Unito tutto per facilità di accesso
-export const ALL_CARDS = [...SUSPECTS, ...WEAPONS, ...ROOMS];
+export const ALL_CARDS: Card[] = [...SUSPECTS, ...WEAPONS, ...ROOMS];
 
 // --- 2. CONFIGURAZIONE GIOCATORI ---
 

@@ -2,12 +2,12 @@
 import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
 import { CluedoGame } from './game/Game';
-import { CluedoBoard } from './game/BoardTry';
+import Board from './game/Board';
 
 // Configurazione del Client di Gioco
 const CluedoClient = Client({
   game: CluedoGame,      // 1. Le Regole (Backend Logic)
-  board: CluedoBoard,    // 2. La Grafica (Frontend UI)
+  board: Board,    // 2. La Grafica (Frontend UI)
   
   // 3. Il Canale di Comunicazione (Multiplayer)
  multiplayer: SocketIO({
