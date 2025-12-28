@@ -1,16 +1,9 @@
 import React from "react";
-import { CELL_TYPES, type CellType } from "@cluedo-digital/shared";
+import { CELL_TYPES, type CellDefinition } from "@cluedo-digital/shared";
 
-interface CellProps {
-    x: number;
-    y: number;
-    type: CellType;
-    onClick: (x: number, y: number) => void;
-    children?: React.ReactNode;
-    isHighlighted?: boolean;
-}
 
-const Cell: React.FC<CellProps> = ({ x, y, type, onClick, children, isHighlighted }) => {
+
+const Cell: React.FC<CellDefinition> = ({ x, y, type, doorTo, startForSuspect, onClick, children, isHighlighted }) => {
 
     const isInteractive = type !== CELL_TYPES.VOID;
 
@@ -29,6 +22,7 @@ const Cell: React.FC<CellProps> = ({ x, y, type, onClick, children, isHighlighte
             }}
             data-x={x}
             data-y={y}
+            title={doorTo ? `Porta: ${doorTo}` : startForSuspect ? `Start: ${startForSuspect}` : ''}
         >
             {children}
         </div>

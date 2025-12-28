@@ -1,4 +1,3 @@
-// Game.ts definisce le regole (la matematica del gioco)
 import type { Game } from 'boardgame.io';
 import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js'; // Importiamo questo helper
 
@@ -6,7 +5,10 @@ import type {
   CluedoGameState, 
   Card, 
   Player, 
-  SuspectID 
+  SuspectID,
+  SuspectCard, 
+  WeaponCard,
+  RoomCard
 } from "@cluedo-digital/shared";
 
 import { 
@@ -111,32 +113,39 @@ export const CluedoGame: Game<CluedoGameState> = {
         
         // Posizione iniziale dalla mappa
         // position: STARTING_POSITIONS[suspectDef.id as SuspectID], COMMENTATO PER ORA
-        position: 0, // Temporaneo, da sistemare con la mappa
+        position: {x: 0, y: 0}, // Temporaneo, da sistemare con la mappa
         
         isEliminated: false,
-        wasMovedBySuggestion: false // All'inizio nessuno è stato trascinato
+        wasMovedBySuggestion: false, // All'inizio nessuno è stato trascinato
+        currentRoom: undefined,
       };
     }
 
     // C. Ritorna lo Stato Iniziale Completo ($G)
     return {
-      secretEnvelope: dealt.secretEnvelope,
+      // secretEnvelope: dealt.secretEnvelope,
+      secretEnvelope: {
+        suspect: dealt.secretEnvelope[0],
+        weapon: dealt.secretEnvelope[1],
+        room: dealt.secretEnvelope[2]
+      },
       tableCards: dealt.tableCards,
       players: players,
-      dice: [0, 0], // Dadi non ancora lanciati
-      suggestion: null,
+      diceRoll: [0, 0], // Dadi non ancora lanciati
+      currentSuggestion: null,
+      // isMoved: false
     };
   },
 
-  // Qui definiremo le mosse (Roll, Move, Accuse...)
   moves: {
-    // rollDice: ...
-    // moveToken: ...
+    clickCell: ({ G }, x, y) => {
+      console.log('Click ricevuto:', x, y);
+    },
   },
 
-  // Qui definiremo il flusso dei turni
   turn: {
-    // activePlayers: ...
+    minMoves: 1,
+    maxMoves: 1,
   },
   
   // // Condizioni di vittoria/fine
