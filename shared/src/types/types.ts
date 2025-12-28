@@ -129,7 +129,7 @@ export type NotebookState = Record<string, boolean>;
 
 // // Definizione di una singola casella della mappa (Dato Statico)
 // export interface CellDefinition {
-//   type: CellType;
+//   type: CellType;p
   
 //   // Se è una PORTA, a quale stanza porta? (Es. "kitchen")
 //   doorTo?: RoomID; 
