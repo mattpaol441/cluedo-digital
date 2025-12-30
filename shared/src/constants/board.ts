@@ -51,9 +51,9 @@ export const DOOR_MAPPING: Record<string, RoomID> = {
 
     "18,20": "study",
 
-    //"11, 18": "hall",
-    "12, 18": "hall",
-    //"13, 18": "hall",
+    "11,18": "hall",
+    "12,18": "hall",
+    "13,18": "hall",
     "15,19": "hall",
 
     "6,19": "lounge",
