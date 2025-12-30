@@ -26,7 +26,7 @@ import {
 
 
 import { 
-  STARTING_POSITIONS
+  SUSPECT_START_COORDS
 } from "@cluedo-digital/shared";
 
 // Funzione per distribuire le carte
@@ -122,7 +122,7 @@ export const CluedoGame: Game<CluedoGameState> = {
         
         // Posizione iniziale dalla mappa
         // position: STARTING_POSITIONS[suspectDef.id as SuspectID], COMMENTATO PER ORA
-        position: STARTING_POSITIONS[suspectDef.id as SuspectID],
+        position: SUSPECT_START_COORDS[suspectDef.id as SuspectID],
         
         isEliminated: false,
         wasMovedBySuggestion: false, // All'inizio nessuno è stato trascinato
