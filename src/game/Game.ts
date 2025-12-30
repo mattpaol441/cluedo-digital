@@ -1,23 +1,32 @@
 import type { Game } from 'boardgame.io';
-import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js'; // Importiamo questo helper
+// import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js'; // Importiamo questo helper
 
-import type { 
-  CluedoGameState, 
-  Card, 
-  Player, 
-  SuspectID,
-  SuspectCard, 
-  WeaponCard,
-  RoomCard
+import { 
+  type CluedoGameState,
+  type Player,
+  type Card, 
+  type SuspectID,
+  type SuspectCard, 
+  type WeaponCard,
+  type RoomCard,
 } from "@cluedo-digital/shared";
+
+
 
 import { 
   SUSPECTS, 
   WEAPONS, 
-  ROOMS, 
-  // STARTING_POSITIONS, da definire meglio quando avremo la mappa
+  ROOMS,
   CHARACTER_COLORS,
   ALL_CARDS
+} from "@cluedo-digital/shared";
+
+
+
+
+
+import { 
+  STARTING_POSITIONS
 } from "@cluedo-digital/shared";
 
 // Funzione per distribuire le carte
@@ -113,7 +122,7 @@ export const CluedoGame: Game<CluedoGameState> = {
         
         // Posizione iniziale dalla mappa
         // position: STARTING_POSITIONS[suspectDef.id as SuspectID], COMMENTATO PER ORA
-        position: {x: 0, y: 0}, // Temporaneo, da sistemare con la mappa
+        position: STARTING_POSITIONS[suspectDef.id as SuspectID],
         
         isEliminated: false,
         wasMovedBySuggestion: false, // All'inizio nessuno è stato trascinato
@@ -124,17 +133,17 @@ export const CluedoGame: Game<CluedoGameState> = {
     // C. Ritorna lo Stato Iniziale Completo ($G)
     return {
       // secretEnvelope: dealt.secretEnvelope,
-      secretEnvelope: {
-        suspect: dealt.secretEnvelope[0],
-        weapon: dealt.secretEnvelope[1],
-        room: dealt.secretEnvelope[2]
-      },
+      // secretEnvelope: {
+      //   suspect: dealt.secretEnvelope[0],
+      //   weapon: dealt.secretEnvelope[1],
+      //   room: dealt.secretEnvelope[2]
+      // },
+      secretEnvelope: dealt.secretEnvelope,
       tableCards: dealt.tableCards,
       players: players,
       diceRoll: [0, 0], // Dadi non ancora lanciati
       currentSuggestion: null,
-      // isMoved: false
-    };
+      };
   },
 
   moves: {

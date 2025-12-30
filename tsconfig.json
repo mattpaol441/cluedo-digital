@@ -1,11 +1,4 @@
 {
-  "compilerOptions": {
-    // ... altre opzioni esistenti ...
-    "baseUrl": ".",
-    "paths": {
-      "@cluedo-digital/shared": ["../shared/src/index.ts"]
-    }
-  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },

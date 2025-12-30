@@ -1,5 +1,5 @@
-import { CellValues, BoardMatrix } from "../types/board";
-import { RoomID, SuspectID } from "../types/models";
+import { CellValues, BoardMatrix } from "../types/board.js";
+import { RoomID, SuspectID } from "../types/models.js";
 export const CELL_TYPES = CellValues;
 
 export const BOARD_LAYOUT: BoardMatrix = [
@@ -42,11 +42,11 @@ export const DOOR_MAPPING: Record<string, RoomID> = {
     "7,2": "billiard_room",
 };
 
-export const STARTING_POSITIONS: Record<string, SuspectID> = {
-    "0,17": "mustard",
-    "24,6": "plum",
-    "0,6": "green",
-    "24,17": "peacock",
-    "7,0": "scarlet",
-    "16,24": "orchid",
+export const STARTING_POSITIONS: Record<SuspectID, {x: number, y: number}> = {
+  mustard: { x: 0,  y: 17 }, // Era "0,17"
+  plum:    { x: 24, y: 6  }, // Era "24,6"
+  green:   { x: 0,  y: 6  }, // Era "0,6"
+  peacock: { x: 24, y: 17 }, // Era "24,17"
+  scarlet: { x: 7,  y: 0  }, // Era "7,0"
+  orchid:  { x: 16, y: 24 }  // Era "16,24" (Al posto di White)
 };

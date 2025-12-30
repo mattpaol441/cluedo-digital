@@ -1,4 +1,4 @@
-import { RoomID, SuspectID } from "./types";
+import { RoomID, SuspectID } from "./models.js";
 
 export const CellValues = {
     VOID: 0,

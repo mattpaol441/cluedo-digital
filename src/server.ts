@@ -1,5 +1,6 @@
 // dica a Node.js "prendi gli attrezzi di BoardGame.io, calaci sopra le mie regole di Cluedo e avvia tutto sulla porta 8000".
 // NOTA BENE: Puntiamo esplicitamente alla versione CJS per evitare errori di importazione ESM e per garantire la stabilità su Node 22
+// @ts-expect-error - boardgame.io non fornisce tipi per l'import CJS diretto, ma funziona a runtime
 import { Server, Origins } from 'boardgame.io/dist/cjs/server.js'; 
 import { CluedoGame } from './game/Game';
 

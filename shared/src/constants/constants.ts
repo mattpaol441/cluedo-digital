@@ -1,4 +1,4 @@
-import type { Card, SuspectCard, WeaponCard, RoomCard, SuspectID } from '../types/models';
+import type { Card, SuspectCard, WeaponCard, RoomCard, SuspectID } from '../types/models.js';
 
 // --- 1. LISTE CARTE (Source of Truth) ---
 
