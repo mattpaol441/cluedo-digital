@@ -31,33 +31,50 @@ export const BOARD_LAYOUT: BoardMatrix = [
 ];
 // To do change values x, y
 export const DOOR_MAPPING: Record<string, RoomID> = {
-    "9,5": "kitchen",
-    "20,4": "ballroom",
-    "5,12": "conservatory",
-    "18,14": "dining_room",
-    "3,19": "lounge",
-    "12,9": "hall",
-    "14,20": "study",
-    "19,7": "library",
-    "7,2": "billiard_room",
+    "9,6": "ballroom",
+    "8,5": "ballroom",
+    "15,6": "ballroom",
+    "16,5": "ballroom",
+
+    "20,4": "conservatory",
+
+    "5,6": "kitchen",
+
+    "7,12": "dining_room",
+    "6,15": "dining_room",
+
+    "18,9": "billiard_room",
+    "23,11": "billiard_room",
+
+    "21,13": "library",
+    "17,15": "library",
+
+    "18,20": "study",
+
+    //"11, 18": "hall",
+    "12, 18": "hall",
+    //"13, 18": "hall",
+    "15,19": "hall",
+
+    "6,19": "lounge",
 };
 
 // Mappa: coordinate -> SuspectID (per Board.tsx)
 export const STARTING_POSITIONS: Record<string, SuspectID> = {
   "0,17": "mustard",
-  "24,6": "plum",
-  "0,6": "green",
-  "24,17": "peacock",
-  "7,0": "scarlet",
-  "16,24": "orchid"
+  "24,18": "plum",
+  "15,0": "green",
+  "24,6": "peacock",
+  "7,24": "scarlet",
+  "9,0": "orchid"
 };
 
 // Mappa: SuspectID -> coordinate (se serve per altre logiche)
 export const SUSPECT_START_COORDS: Record<SuspectID, {x: number, y: number}> = {
   mustard: { x: 0,  y: 17 },
-  plum:    { x: 24, y: 6  },
-  green:   { x: 0,  y: 6  },
-  peacock: { x: 24, y: 17 },
-  scarlet: { x: 7,  y: 0  },
-  orchid:  { x: 16, y: 24 }
+  plum:    { x: 24, y: 18  },
+  green:   { x: 15,  y: 0  },
+  peacock: { x: 24, y: 6 },
+  scarlet: { x: 7,  y: 24  },
+  orchid:  { x: 9, y: 0 }
 };
