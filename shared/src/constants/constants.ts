@@ -43,7 +43,7 @@ export const CHARACTER_COLORS: Record<SuspectID, string> = {
   peacock:  '#0000FF', // Blu Pavone
   plum:     '#8E4585', // Viola Prugna
   mustard:  '#FFDB58', // Giallo Senape
-  orchid:   '#DA70D6', // Rosa Orchidea
+  orchid:   '#ffffffff', // Bianco Orchidea
   green:    '#008000', // Verde
 };
 
