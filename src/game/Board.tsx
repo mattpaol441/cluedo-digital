@@ -6,11 +6,10 @@ import {
     DOOR_MAPPING, 
     STARTING_POSITIONS,
     CHARACTER_COLORS, 
-    type CluedoGameState,
-    type RoomID,
-    type SuspectID } from "@cluedo-digital/shared";
+    type CluedoGameState } from "@cluedo-digital/shared";
 
 import Cell from "./Cell";
+import Pawn from "./Pawn";
 import './Board.css';
 import boardBg from "../assets/cluedo-board.jpg";
 
@@ -21,17 +20,19 @@ const getCoordKey = (x: number, y: number) => `${x},${y}`;
 type CluedoBoardProps = BoardProps<CluedoGameState>;
 
 const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
-    const handleCellClick = (x: number, y: number) => {
-        // Controllo base: Se non è il mio turno, ignoro il click (opzionale ma consigliato)
-        // const isMyTurn = ctx.currentPlayer === ... (logica clientID)
-    
-        const key = getCoordKey(x, y);
-        console.log(`Cell clicked at (${key}) | Current Player: ${ctx.currentPlayer}`);
+    //Helper to show palyer in coord x,y
+    const getPlayerAt = (x: number, y: number) => {
+        return Object.values(G.players).find(player => 
+            player.position.x === x && player.position.y === y && !player.isEliminated
+        );
+    };
 
-        const roomID = DOOR_MAPPING[key];
-        if (roomID) {
-            console.log(`Player is attempting to enter room: ${roomID}`);
+    const handleCellClick = (x: number, y: number) => {
+        // Check if the cell is VOID (WALL) or CENTER
+        if (BOARD_LAYOUT[y][x] === CELL_TYPES.VOID || BOARD_LAYOUT[y][x] === CELL_TYPES.CENTER) {
+            return; // Nothing if VOID or CENTER
         }
+        moves.movePawn(x, y);
     };
 
     return (
@@ -63,6 +64,8 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
                         // Recupero colore (se esiste startFor)
                         const startColor = startFor ? CHARACTER_COLORS[startFor] : undefined;
 
+                        const playerHere = getPlayerAt(x, y);
+
                         return (
                             <Cell
                                 key={coordKey}
@@ -83,7 +86,13 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
                                     />
                                 )}
                                 
-                                {/* TODO: Qui mapperemo le pedine dei giocatori (G.players) */}
+                                {playerHere && (
+                                    <Pawn 
+                                        id ={playerHere.name}
+                                        color={playerHere.color}
+                                        isCurrentTurn={ctx.currentPlayer === playerHere.id}
+                                    />
+                                )}
                             </Cell>
                         );
                     })

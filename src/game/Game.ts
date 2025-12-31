@@ -1,5 +1,4 @@
 import type { Game } from 'boardgame.io';
-// import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js'; // Importiamo questo helper
 
 import { 
   type CluedoGameState,
@@ -9,6 +8,7 @@ import {
   type SuspectCard, 
   type WeaponCard,
   type RoomCard,
+  CELL_TYPES,
 } from "@cluedo-digital/shared";
 
 
@@ -21,7 +21,10 @@ import {
   ALL_CARDS
 } from "@cluedo-digital/shared";
 
-
+import { 
+  DOOR_MAPPING,
+  BOARD_LAYOUT
+ } from '@cluedo-digital/shared';
 
 
 
@@ -147,8 +150,30 @@ export const CluedoGame: Game<CluedoGameState> = {
   },
 
   moves: {
-    clickCell: ({ G }, x, y) => {
+    movePawn: ({ G , ctx, events }, x: number, y: number) => {
+      const cellType = BOARD_LAYOUT[y][x];
+
+      if  (cellType === CELL_TYPES.VOID || cellType === CELL_TYPES.CENTER) {
+        return 'INVALID_MOVE'; // Non si può muovere qui
+      }
+
+
+      const playerID = ctx.currentPlayer;
+      const player = G.players[playerID];
+
+      // Aggiorna la posizione del giocatore
+      player.position = { x, y };
+
+      const coordKey = `${x},${y}`;
+      if (DOOR_MAPPING[coordKey]) {
+        player.currentRoom = DOOR_MAPPING[coordKey];
+        console.log(`Player ${player.name} è entrato nella stanza: ${player.currentRoom}`);
+      } else {
+        player.currentRoom = undefined; // In corridoio
+      }
+
       console.log('Click ricevuto:', x, y);
+      events.endTurn(); // Termina il turno dopo la mossa
     },
   },
 

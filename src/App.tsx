@@ -9,7 +9,7 @@ import Board from './game/Board';
 const CluedoClient = Client({
   game: CluedoGame,      // 1. Le Regole (Backend Logic)
   board: Board,    // 2. La Grafica (Frontend UI)
-  
+  numPlayers: 6,
   // 3. Il Canale di Comunicazione (Multiplayer)
  multiplayer: SocketIO({
   server: '/', 

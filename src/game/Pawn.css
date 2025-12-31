@@ -1,0 +1,65 @@
+.pawn {
+  /* DIMENSIONI E FORMA */
+  /* Usiamo una percentuale per adattarci alla grandezza della cella */
+  width: 65%;
+  height: 65%;
+  
+  /* Assicura che sia sempre un cerchio perfetto */
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+
+  /* POSIZIONAMENTO */
+  /* Centra la pedina rispetto al contenitore (se non è gestito dal padre) */
+  margin: auto;
+  z-index: 10; /* Assicura che stia sopra eventuali decorazioni della cella */
+
+  position: relative;
+  top: 15%; /* Aggiustamento verticale per centrare meglio */
+  left : 5%;
+
+
+  /* ESTETICA 3D */
+  /* Bordo bianco per contrasto con lo sfondo scuro della board */
+  border: 2px solid white; 
+  
+  /* Trucco per l'effetto 3D "plasticoso":
+     1. Inset shadow: dà volume interno (la luce arriva da in alto a sx)
+     2. Drop shadow: l'ombra che la pedina proietta sul tabellone
+  */
+  box-shadow: 
+    inset -3px -3px 5px rgba(0, 0, 0, 0.4),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.4),
+    1px 2px 4px rgba(0, 0, 0, 0.6);
+
+  /* INTERAZIONE */
+  /* Rendiamo la transizione fluida se si ingrandisce */
+  transition: all 0.3s ease-in-out;
+  cursor: default; /* O pointer se la pedina è cliccabile */;
+}
+
+/* --- STATO: TURNO CORRENTE --- */
+/* Quando è il turno di questo giocatore, la pedina "pulsa" o brilla */
+.pawn.current-turn {
+  /* La ingrandiamo leggermente */
+  transform: scale(1.15);
+  z-index: 20; /* La portiamo in primo piano assoluto */
+  border-color: #ffff00; /* Bordo giallo */
+  
+  /* Glow esterno giallo */
+  box-shadow: 
+    0 0 10px rgba(255, 255, 0, 0.8),
+    inset -3px -3px 5px rgba(0, 0, 0, 0.4);
+    
+  /* Animazione continua */
+  animation: pawn-pulse 1.5s infinite alternate;
+}
+
+/* Definizione dell'animazione di pulsazione */
+@keyframes pawn-pulse {
+  from {
+    box-shadow: 0 0 5px rgba(255, 255, 0, 0.5), inset -3px -3px 5px rgba(0, 0, 0, 0.4);
+  }
+  to {
+    box-shadow: 0 0 15px rgba(255, 255, 0, 1), inset -3px -3px 5px rgba(0, 0, 0, 0.4);
+  }
+}
