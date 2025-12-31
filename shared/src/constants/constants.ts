@@ -4,10 +4,10 @@ import type { Card, SuspectCard, WeaponCard, RoomCard, SuspectID } from '../type
 
 export const SUSPECTS: SuspectCard[] = [
   { id: 'scarlet',  name: 'Miss Scarlet',       type: 'SUSPECT' },
+  { id: 'orchid',   name: 'Dottoressa Orchid',  type: 'SUSPECT' },
   { id: 'peacock',  name: 'Contessa Peacock',   type: 'SUSPECT' },
   { id: 'plum',     name: 'Professor Plum',     type: 'SUSPECT' },
-  { id: 'mustard',  name: 'Colonnello Mustard', type: 'SUSPECT' },
-  { id: 'orchid',   name: 'Dottoressa Orchid',  type: 'SUSPECT' }, 
+  { id: 'mustard',  name: 'Colonnello Mustard', type: 'SUSPECT' }, 
   { id: 'green',    name: 'Reverendo Green',    type: 'SUSPECT' },
 ];
 
