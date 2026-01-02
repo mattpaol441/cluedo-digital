@@ -29,7 +29,7 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
 
     const handleCellClick = (x: number, y: number) => {
         // Check if the cell is VOID (WALL) or CENTER
-        if (BOARD_LAYOUT[y][x] === CELL_TYPES.VOID || BOARD_LAYOUT[y][x] === CELL_TYPES.CENTER) {
+        if (BOARD_LAYOUT[y][x] === CELL_TYPES.VOID) { // Rimosso il blocco per CENTER_ROOM dato che ci si può entrare normalmente
             return; // Nothing if VOID or CENTER
         }
         moves.movePawn(x, y);

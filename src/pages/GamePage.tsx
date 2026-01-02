@@ -6,12 +6,13 @@ import type { CluedoGameState } from "@cluedo-digital/shared";
 import Board from "../game/Board";
 import PlayerSidebar from "../components/PlayerSidebar";
 import { Notebook } from "../components/Notebook";
+import { GameModals } from "../components/GameModals"; 
 
 type GamePageProps = BoardProps<CluedoGameState>;
 
 const GamePage: React.FC<GamePageProps> = (props) => {
     // Destructuring props
-    const { G, ctx, playerID, matchID } = props;
+    const { G, ctx, playerID, matchID, moves } = props;
 
     // Data preparation
     const playersList = useMemo(() => {
@@ -20,11 +21,20 @@ const GamePage: React.FC<GamePageProps> = (props) => {
 
     // Identify my player
     const myPlayer = playerID ? G.players[playerID] : null;
-
+    
     return (
         // Main Container
-        <div className="h-screen w-screen bg-slate-900 flex flex-col overflow-hidden font-sans text-white">
+        <div className="h-screen w-screen bg-slate-900 flex flex-col overflow-hidden font-sans text-white relative">
 
+            {/* IL GESTORE UNICO: Si occupa di Vittoria, Sconfitta, Accuse, ecc. */}
+            {/* React ridisegna GamePage, la GamePage riceve i nuovi dati (G, ctx) ma non li legge nemmeno, si limita a passarli al componente GameModals. */}
+            <GameModals 
+                G={G} 
+                ctx={ctx} 
+                moves={moves} 
+                playerID={playerID} 
+            />
+            
             {/* --- 1. HEADER --- */}
             <header className="h-14 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 z-10">
                 <h1 className="text-xl font-bold tracking-widest text-slate-100">
@@ -58,7 +68,7 @@ const GamePage: React.FC<GamePageProps> = (props) => {
                     </div>
                 </main>
 
-                {/* DX COLUMN: NOTEBOOK */}
+                {/* DX COLUMN: NOTEBOOK, Da modificare togliendo l'OR [] perchè il Notebook non deve poter funzionare con valori undefined */} 
                 <aside className="w-80 bg-slate-100 border-l border-slate-800 flex flex-col shrink-0 z-10 text-slate-900">
                     <div className="w-full h-full p-2 bg-slate-200">
                          <Notebook 
@@ -71,7 +81,7 @@ const GamePage: React.FC<GamePageProps> = (props) => {
                     </div>
                 </aside>
             </div>
-
+            
             {/* --- 3. FOOTER (THE CARDS) --- */}
             <footer className="h-24 bg-slate-950 border-t border-slate-800 shrink-0 px-6 flex items-center justify-center z-20">
                 
