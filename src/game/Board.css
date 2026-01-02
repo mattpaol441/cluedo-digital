@@ -1,11 +1,16 @@
 .board-container {
   position: relative;
   width: 100%;
-  max-width: 800px; /* O la dimensione che vuoi */
+  height: 100%;
+ 
   margin: 0 auto;
   /* MANTENERE L'ASPECT RATIO È FONDAMENTALE */
   /* Se la tua matrice è 25x25 (quadrata), l'aspect-ratio deve essere 1/1 */
-  aspect-ratio: 1 / 1; 
+  aspect-ratio: 1 / 1;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .board-image {
