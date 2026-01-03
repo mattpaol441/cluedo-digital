@@ -1,12 +1,12 @@
 import type { SuspectID } from "@cluedo-digital/shared";
 
 //Import avatar images
-import greenAvatar from "../assets/greenAvatar.jpg";
-import mustardAvatar from "../assets/mustardAvatar.jpg";
-import orchidAvatar from "../assets/orchidAvatar.jpg";
-import peacockAvatar from "../assets/peacockAvatar.jpg";
-import plumAvatar from "../assets/plumAvatar.jpg";
-import scarletAvatar from "../assets/scarletAvatar.jpg";
+import greenAvatar from "../assets/suspectAvatars/greenAvatar.jpg";
+import mustardAvatar from "../assets/suspectAvatars/mustardAvatar.jpg";
+import orchidAvatar from "../assets/suspectAvatars/orchidAvatar.jpg";
+import peacockAvatar from "../assets/suspectAvatars/peacockAvatar.jpg";
+import plumAvatar from "../assets/suspectAvatars/plumAvatar.jpg";
+import scarletAvatar from "../assets/suspectAvatars/scarletAvatar.jpg";
 
 // Mapping 
 const AVATAR_MAP: Record<SuspectID, string> = {

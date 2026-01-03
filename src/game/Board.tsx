@@ -5,13 +5,12 @@ import {
     CELL_TYPES, 
     DOOR_MAPPING, 
     STARTING_POSITIONS,
-    CHARACTER_COLORS, 
     type CluedoGameState } from "@cluedo-digital/shared";
 
 import Cell from "./Cell";
 import Pawn from "./Pawn";
-import './Board.css';
-import boardBg from "../assets/cluedo-board.jpg";
+
+import boardBg from "../assets/board/cluedo-board.jpg";
 
 
 const getCoordKey = (x: number, y: number) => `${x},${y}`;
@@ -36,12 +35,25 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
     };
 
     return (
-        <div className="board-container">
-            {/* Immagine di Sfondo */}
-            <img src={boardBg} alt="Cluedo Board" className="board-image" />
+        /* Main Container */
+        <div className="relative w-full h-full aspect-square flex justify-center items-center mx-auto bg-[#333]">
+            {/* Background Image */}
+            <img 
+                src={boardBg} 
+                alt="Cluedo Board" 
+                className="w-full h-full object-contain block pointer-events-none select-none" 
+            />
 
-            {/* Griglia delle Celle */}
-            <div className="board-grid">
+            {/* Grid of Cells */}
+            <div className="
+                absolute 
+                top-[1.2%] left-[1.1%] 
+                w-[97.8%] h-[97.6%] 
+                grid 
+                grid-cols-[repeat(25,1fr)] 
+                grid-rows-[repeat(25,1fr)] 
+                z-10
+            ">
                 {BOARD_LAYOUT.map((row, y) => 
                     row.map((cellType, x) => {
                         
@@ -60,9 +72,6 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
                         const startFor = cellType === CELL_TYPES.START 
                             ? STARTING_POSITIONS[coordKey] 
                             : undefined;
-                        
-                        // Recupero colore (se esiste startFor)
-                        const startColor = startFor ? CHARACTER_COLORS[startFor] : undefined;
 
                         const playerHere = getPlayerAt(x, y);
 
@@ -77,14 +86,6 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
                                 onClick={handleCellClick}
                                 // TODO: isHighlighted={G.validMoves.includes(coordKey)}
                             >
-                                {/* Indicatore visivo per i punti di partenza */}
-                                {startFor && startColor && (
-                                    <div 
-                                        className="start-indicator"
-                                        style={{ backgroundColor: startColor }}
-                                        title={`Partenza: ${startFor}`} 
-                                    />
-                                )}
                                 
                                 {playerHere && (
                                     <Pawn 
