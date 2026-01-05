@@ -19,6 +19,8 @@ const getCoordKey = (x: number, y: number) => `${x},${y}`;
 type CluedoBoardProps = BoardProps<CluedoGameState>;
 
 const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
+    const currentPlayer = G.players[ctx.currentPlayer];
+    
     //Helper to show palyer in coord x,y
     const getPlayerAt = (x: number, y: number) => {
         return Object.values(G.players).find(player => 
@@ -27,12 +29,16 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
     };
 
     const handleCellClick = (x: number, y: number) => {
-        // Check if the cell is VOID (WALL) or CENTER
-        if (BOARD_LAYOUT[y][x] === CELL_TYPES.VOID) { // Rimosso il blocco per CENTER_ROOM dato che ci si può entrare normalmente
-            return; // Nothing if VOID or CENTER
+        const key = getCoordKey(x, y);
+        if (!currentPlayer.validMoves.includes(key)) {
+            console.log(`Cella (${x}, ${y}) non è una mossa valida.`);
+            return;
         }
+        
         moves.movePawn(x, y);
     };
+
+    
 
     return (
         /* Main Container */
@@ -75,6 +81,8 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
 
                         const playerHere = getPlayerAt(x, y);
 
+                        const isValidMove = currentPlayer.validMoves.includes(coordKey);
+
                         return (
                             <Cell
                                 key={coordKey}
@@ -84,7 +92,7 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
                                 doorTo={doorTo}
                                 startForSuspect={startFor}
                                 onClick={handleCellClick}
-                                // TODO: isHighlighted={G.validMoves.includes(coordKey)}
+                                isHighlighted={isValidMove}
                             >
                                 
                                 {playerHere && (

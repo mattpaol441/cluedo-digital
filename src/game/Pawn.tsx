@@ -26,7 +26,7 @@ const Pawn: React.FC<PawnProps> = ({ id, color, isCurrentTurn = false }) => {
                 /* Positioning */
                 m-auto 
                 relative 
-                top-[15%] left-[5%]
+                top-[2%] left-[2%]
                 z-10
 
                 /* Base Styling */

@@ -32,6 +32,8 @@ import {
   SUSPECT_START_COORDS
 } from "@cluedo-digital/shared";
 
+import { getValidMoves } from './utils/movementLogic.js';
+
 // Funzione per distribuire le carte
 const dealCards = (random: any, numPlayers: number): {secretEnvelope: Card[], playerHands: Card[][], tableCards: Card[]} => {
   // Creiamo copie dei mazzi per non modificare le costanti originali
@@ -129,6 +131,8 @@ export const CluedoGame: Game<CluedoGameState> = {
         isEliminated: false,
         wasMovedBySuggestion: false, // All'inizio nessuno è stato trascinato
         currentRoom: undefined, 
+        hasMoved: false, // All'inizio del gioco nessuno ha mosso
+        validMoves: [], // All'inizio del gioco nessuno ha mosso
       };
 
       // // --- DEBUG TEST: TELEPORT MODE ---
@@ -164,19 +168,46 @@ export const CluedoGame: Game<CluedoGameState> = {
 
    moves: { // NOTA IMPORTANTE: per le azioni che vengono proibite a giocatori eliminati, il controllo va fatto qui dentro, non nel frontend. Il frontend è solo un'interfaccia utente, il vero "cervello" del gioco è qui.
     // In particolare, viene proibita ogni mossa, ad eccezione di revealCard (per mostrare le carte agli altri giocatori e quindi smentire le iptesi altrui)
+    rollDice: ({ G, ctx , random }) => {
+      // Dies are provided by boardgame.io random api
+      const die1 = random.Die(6);
+      const die2 = random.Die(6);
+
+      G.diceRoll = [die1, die2];
+
+      const player = G.players[ctx.currentPlayer];
+
+      // Calculate muves and save in the player state
+      player.validMoves = getValidMoves(player.position.x, player.position.y, die1 + die2, G.players, player.id);
+      console.log(`Dadi lanciati: ${die1} e ${die2} (Totale: ${die1 + die2}). Mosse calcolate:`, player.validMoves);
+    },
+
     movePawn: ({ G , ctx, events }, x: number, y: number) => {
 
       const playerID = ctx.currentPlayer;
       const player = G.players[playerID];
-      // Se il Player è eliminato, blocchiamo il movimento 
+      const coordKey = `${x},${y}`;
+      // -- CHECKS --
+      // If the Player is eliminated, block new moves 
       if (player.isEliminated) return 'INVALID_MOVE';
 
-      // 2. BLOCCO MOVIMENTI MULTIPLI (Stop Obbligatorio)
-      // Se hai già mosso 1 volta in questo turno, non puoi muovere ancora! Ciò non vuol dire che non puoi fare altre azioni, ma solo che il movimento è limitato a 1 per turno.
-      if ((ctx.numMoves ?? 0) > 0) {
+      // Check  if player has already moved this turn
+      if (player.hasMoved) {
+        console.log("Errore: Il giocatore ha già effettuato un movimento in questo turno.");
+        return 'INVALID_MOVE'; // Ha già mosso in questo turno
+      }
+
+      // Check if dice have been rolled
+      if (G.diceRoll[0] === 0 && G.diceRoll[1] === 0) {
+        console.log("Errore: I dadi non sono stati lanciati.");
         return 'INVALID_MOVE';
       }
 
+      // Check if the move is valid based on precomputed validMoves
+      if (!player.validMoves.includes(coordKey)) {
+        console.log(`Errore: Mossa non valida verso (${x}, ${y}). Mosse valide sono:`, player.validMoves);
+        return 'INVALID_MOVE';
+      }
 
       const cellType = BOARD_LAYOUT[y][x];
 
@@ -188,26 +219,27 @@ export const CluedoGame: Game<CluedoGameState> = {
 
       // Definiamo le zone dove si può stare in tanti, quindi dove è consentita la sovrapposizione (Safe Zones)
       // Consentita se è una di queste celle:
-      const canStack = (
-        cellType === CELL_TYPES.CENTER || // Al centro è fondamentale, perchè se un player fa l'accusa finale e sbaglia allora viene eliminato ma rimane al centro, quindi se non fosse consentita la sovrapposizione gli altri non potrebbero più andarci e fare l'accusa finale
-        cellType === CELL_TYPES.DOOR      // Sulle porte si deve poter stare in tanti, per facilitare l'ingresso/uscita dalle stanze
-      );
+      //const canStack = (
+      //  cellType === CELL_TYPES.CENTER || // Al centro è fondamentale, perchè se un player fa l'accusa finale e sbaglia allora viene eliminato ma rimane al centro, quindi se non fosse consentita la sovrapposizione gli altri non potrebbero più andarci e fare l'accusa finale
+      //  cellType === CELL_TYPES.DOOR      // Sulle porte si deve poter stare in tanti, per facilitare l'ingresso/uscita dalle stanze
+      //);
     
-      if (!canStack) { // // Controllo se c'è qualcuno (ignorando me stesso)
+      //if (!canStack) { // // Controllo se c'è qualcuno (ignorando me stesso)
       // Nota: È importante decidere se i giocatori eliminati bloccano il passaggio.
       // Di solito in Cluedo digitale, se uno è eliminato la sua pedina sparisce o diventa trasparente.
       // Qui controlliamo solo se c'è una collisione fisica sui dati.
-        const isOccupied = Object.values(G.players).some((p: any) => 
-          p.id !== ctx.currentPlayer && 
-          p.position.x === x &&         
-          p.position.y === y
+        //const isOccupied = Object.values(G.players).some((p: any) => 
+          //p.id !== ctx.currentPlayer && 
+          //p.position.x === x &&         
+          //p.position.y === y
           // !p.isEliminated // OPZIONALE: Se vuoi che i morti non blocchino i corridoi, scommenta questa riga            
-        );
-        if (isOccupied) return 'INVALID_MOVE'; 
-      }
+        //);
+        //if (isOccupied) return 'INVALID_MOVE'; 
+      //}
 
       // Aggiorna la posizione del giocatore
       player.position = { x, y };
+      player.hasMoved = true; // Segnaliamo che il giocatore ha già mosso in questo turno
 
       // 4. GESTIONE SPECIFICA DEL CENTRO (ACCUSA FINALE)
       if (cellType === CELL_TYPES.CENTER) {
@@ -220,7 +252,9 @@ export const CluedoGame: Game<CluedoGameState> = {
         return; 
       }
 
-      const coordKey = `${x},${y}`;
+      // Reset valid moves after moving
+      player.validMoves = [];
+      
       if (DOOR_MAPPING[coordKey]) {
         player.currentRoom = DOOR_MAPPING[coordKey];
         console.log(`Player ${player.name} è entrato nella stanza: ${player.currentRoom}`); // Qui non deve chiudere il turno, perché dopo essersi mosso in una stanza il giocatore deve poter formulare un'ipotesi 
@@ -234,11 +268,6 @@ export const CluedoGame: Game<CluedoGameState> = {
         events.endTurn();
       }
     },
-
-
-
-
-
 
     makeAccusation: ({ G, ctx, events }, suspectId: string, weaponId: string, roomId: string) => { // La funzione riceve i 3 ID che arrivano dal modale (suspectId, weaponId, roomId)
       const playerID = ctx.currentPlayer;
@@ -293,6 +322,15 @@ export const CluedoGame: Game<CluedoGameState> = {
     // Questo viene eseguito all'inizio di OGNI turno
     onBegin: ({ G, ctx, events }) => {
       const currentPlayer = G.players[ctx.currentPlayer];
+
+      // Dice reset at the beginning of the turn
+      G.diceRoll = [0, 0];
+
+      if (currentPlayer) {
+        // Reset movimento
+        currentPlayer.hasMoved = false;
+        currentPlayer.validMoves = [];
+      }
 
       // Se il giocatore di turno è eliminato, passiamo SUBITO al prossimo.
       // Questo soddisfa il requisito di saltare automaticamente i giocatori eliminati.
