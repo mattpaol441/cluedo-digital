@@ -30,4 +30,7 @@ export interface Player {
   // - Se scelgo "Tira Dadi": il flag diventa false e mi muovo.
   // - Se scelgo "Fai Ipotesi": il flag diventa false e passo alla fase 'suggestion'.
   wasMovedBySuggestion: boolean;
+  hasMoved: boolean; // Se il giocatore ha già effettuato il movimento in questo turno
+  validMoves: string[]; // Coordinate valide per il movimento nel turno corrente (es. ["5,10", "6,10"])
+  enteredManually?: boolean;
 }

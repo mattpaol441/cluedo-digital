@@ -34,6 +34,8 @@ import {
   SUSPECT_START_COORDS
 } from "@cluedo-digital/shared";
 
+import { getValidMoves } from '../utils/movementLogic.ts';
+
 // Funzione per distribuire le carte
 const dealCards = (random: any, numPlayers: number): {secretEnvelope: Card[], playerHands: Card[][], tableCards: Card[]} => {
   // Creiamo copie dei mazzi per non modificare le costanti originali
@@ -96,7 +98,7 @@ const dealCards = (random: any, numPlayers: number): {secretEnvelope: Card[], pl
 
 
 
-// --- DEFINIZIONE DEL GIOCO ---
+// DEFINIZIONE DEL GIOCO 
 
 export const CluedoGame: Game<CluedoGameState> = {
   name: 'cluedo-digital',
@@ -130,7 +132,10 @@ export const CluedoGame: Game<CluedoGameState> = {
         
         isEliminated: false,
         wasMovedBySuggestion: false, // All'inizio nessuno è stato trascinato
-        currentRoom: undefined, 
+        currentRoom: undefined,
+        enteredManually: false,       // Per sapere se deve fare ipotesi
+        hasMoved: false,
+        validMoves: [], 
       };
 
       // // --- DEBUG TEST: TELEPORT MODE ---
@@ -164,231 +169,7 @@ export const CluedoGame: Game<CluedoGameState> = {
 
 
 
-   moves: { // NOTA IMPORTANTE: per le azioni che vengono proibite a giocatori eliminati, il controllo va fatto qui dentro, non nel frontend. Il frontend è solo un'interfaccia utente, il vero "cervello" del gioco è qui.
-    // In particolare, viene proibita ogni mossa, ad eccezione di revealCard (per mostrare le carte agli altri giocatori e quindi smentire le iptesi altrui)
-    movePawn: ({ G , ctx, events }, x: number, y: number) => {
-
-      const playerID = ctx.currentPlayer;
-      const player = G.players[playerID];
-      // Se il Player è eliminato, blocchiamo il movimento 
-      if (player.isEliminated) return 'INVALID_MOVE';
-
-      // 2. BLOCCO MOVIMENTI MULTIPLI (Stop Obbligatorio)
-      // Se hai già mosso 1 volta in questo turno, non puoi muovere ancora! Ciò non vuol dire che non puoi fare altre azioni, ma solo che il movimento è limitato a 1 per turno.
-      if ((ctx.numMoves ?? 0) > 0) {
-        return 'INVALID_MOVE';
-      }
-
-
-      // FIX BUG CLICK STESSA CASELLA
-      // BLOCCO MOSSA NULLA:
-      // Se le coordinate di destinazione (x, y) sono identiche a quelle attuali,
-      // annulliamo l'azione. In questo modo boardgame.io NON incrementa numMoves.
-      if (player.position.x === x && player.position.y === y) {
-          console.warn("Mossa ignorata: Clic sulla stessa casella.");
-          return 'INVALID_MOVE'; 
-      }
-    // -------------------------------------------
-
-
-      const cellType = BOARD_LAYOUT[y][x];
-
-      // I muri sono proibiti, non ci si può muovere lì, quindi li blocchiamo subito
-      // Tutto il resto, ovvero HALL, DOOR, START, CENTER va bene
-      if  (cellType === CELL_TYPES.VOID) {
-        return 'INVALID_MOVE'; 
-      }
-
-      // Definiamo le zone dove si può stare in tanti, quindi dove è consentita la sovrapposizione (Safe Zones)
-      // Consentita se è una di queste celle:
-      const canStack = (
-        cellType === CELL_TYPES.CENTER || // Al centro è fondamentale, perchè se un player fa l'accusa finale e sbaglia allora viene eliminato ma rimane al centro, quindi se non fosse consentita la sovrapposizione gli altri non potrebbero più andarci e fare l'accusa finale
-        cellType === CELL_TYPES.DOOR      // Sulle porte si deve poter stare in tanti, per facilitare l'ingresso/uscita dalle stanze
-      );
-    
-      if (!canStack) { // // Controllo se c'è qualcuno (ignorando me stesso)
-      // Nota: È importante decidere se i giocatori eliminati bloccano il passaggio.
-      // Di solito in Cluedo digitale, se uno è eliminato la sua pedina sparisce o diventa trasparente.
-      // Qui controlliamo solo se c'è una collisione fisica sui dati.
-        const isOccupied = Object.values(G.players).some((p: any) => 
-          p.id !== ctx.currentPlayer && 
-          p.position.x === x &&         
-          p.position.y === y
-          // !p.isEliminated // OPZIONALE: Se vuoi che i morti non blocchino i corridoi, scommenta questa riga            
-        );
-        if (isOccupied) return 'INVALID_MOVE'; 
-      }
-
-      // Aggiorna la posizione del giocatore
-      player.position = { x, y };
-
-      // 4. GESTIONE SPECIFICA DEL CENTRO (ACCUSA FINALE)
-      if (cellType === CELL_TYPES.CENTER) {
-        console.log("Il giocatore è entrato nella Busta Gialla (Centro)!");
-        
-        // Assegniamo una 'stanza fittizia' per attivare la UI dell'Accusa
-        player.currentRoom = 'CENTER_ROOM'; 
-        
-        // Il giocatore deve ora avere il tempo di selezionare le carte e fare l'accusa.
-        return; 
-      }
-
-      const coordKey = `${x},${y}`;
-      if (DOOR_MAPPING[coordKey]) {
-        player.currentRoom = DOOR_MAPPING[coordKey];
-        console.log(`Player ${player.name} è entrato nella stanza: ${player.currentRoom}`); // Qui non deve chiudere il turno, perché dopo essersi mosso in una stanza il giocatore deve poter formulare un'ipotesi 
-      }
-
-      else {
-        player.currentRoom = undefined; // In corridoio
-        console.log('Movimento in corridoio completato.');
-        
-        // In corridoio non c'è altro da fare, passo il turno
-        events.endTurn();
-      }
-    },
-
-
-
-
-
-
-    makeAccusation: ({ G, ctx, events }, suspectId: string, weaponId: string, roomId: string) => { // La funzione riceve i 3 ID che arrivano dal modale (suspectId, weaponId, roomId)
-      const playerID = ctx.currentPlayer;
-      const player = G.players[playerID];
-      // Se il Player è eliminato, blocchiamo nuove accuse 
-      if (player.isEliminated) return 'INVALID_MOVE';
-
-      console.log(`[SERVER] Accusa ricevuta da ${player.name}:`, { suspectId, weaponId, roomId });
-
-      // 1. Recuperiamo la Soluzione dalla Busta Gialla
-      // G.secretEnvelope è un array di 3 oggetti Card (inizializzato sopra, nel setup)
-      const envelope = G.secretEnvelope;
-
-      // 2. Verifichiamo se le carte corrispondono
-      // Controlliamo se l'ID ricevuto esiste tra le carte della busta
-      const isSuspectCorrect = envelope.some(card => card.id === suspectId);
-      const isWeaponCorrect = envelope.some(card => card.id === weaponId);
-      const isRoomCorrect = envelope.some(card => card.id === roomId);
-
-      // 3. Logica di Vittoria o Sconfitta
-      if (isSuspectCorrect && isWeaponCorrect && isRoomCorrect) {
-        // --- VITTORIA ---
-        console.log(`[SERVER] VITTORIA! ${player.name} ha risolto il caso.`);
-        
-        // Termina immediatamente la partita dichiarando il vincitore.
-        // Passiamo anche la soluzione per poterla mostrare a tutti nella schermata di Game Over.
-        events.endGame({
-          winner: playerID,
-          solution: { suspectId, weaponId, roomId }
-        });
-
-      } else {
-        // --- SCONFITTA (ELIMINAZIONE) ---
-        console.log(`[SERVER] Accusa ERRATA. ${player.name} è eliminato.`);
-
-        // A. Marchiamo il giocatore come eliminato
-        // Questo è fondamentale: impedisce al frontend di mostrare ancora il modale
-        // e impedirà al giocatore di muoversi nei turni futuri (se gestisci il check su movePawn).
-        player.isEliminated = true;
-
-        // B. (Opzionale) Messaggio nel log di gioco pubblico
-        // G.log.push({ type: 'elimination', player: player.name, message: 'ha sbagliato l\'accusa ed è stato eliminato.' });
-
-        // C. Passiamo il turno
-        // Il giocatore non può fare altro, il suo turno finisce qui per sempre.
-        events.endTurn();
-      }
-    },
-  
-
-
-
-
-
-      makeHypothesis: ({ G, ctx, events }, suspectId: string, weaponId: string) => {
-        const playerID = ctx.currentPlayer;
-        const player = G.players[playerID];
-
-        // I giocatori eliminati non possono fare ipotesi 
-        if (player.isEliminated) {
-            return 'INVALID_MOVE';
-        }
-
-        const currentRoom = player.currentRoom;
-
-        // Deve essere fisicamente in una stanza vera 
-        if (!currentRoom || currentRoom === 'CENTER_ROOM') {
-            return 'INVALID_MOVE'; 
-        }
-
-        // CONTROLLO LEGITTIMITÀ DELL'IPOTESI
-        // Regola: Puoi fare ipotesi SOLO se ti sei mosso in questo turno OPPURE 
-        // se sei stato trascinato qui da un avversario ("wasMovedBySuggestion").
-        // Se eri già qui dall'inizio del turno e nessuno ti ha toccato, devi uscire muovendoti.
-        
-        const hasMovedThisTurn = (ctx.numMoves ?? 0) > 0;
-        const wasDraggedHere = player.wasMovedBySuggestion;
-
-        if (!hasMovedThisTurn && !wasDraggedHere) {
-            console.warn("Mossa illegale, devi muoverti prima di fare un'ipotesi se eri già nella stanza.");
-            return 'INVALID_MOVE';
-        }
-
-        // SE SIAMO QUI, L'IPOTESI È VALIDA
-
-        // SALVIAMO L'IPOTESI NELLO STATO DI GIOCO
-        const nextPlayerID = (parseInt(playerID) + 1) % ctx.numPlayers;
-        
-        G.currentSuggestion = {
-            accuserPlayerId: playerID,
-            suspect: suspectId as SuspectID, 
-            weapon: weaponId as WeaponID,
-            room: currentRoom as RoomID,  //  La stanza è obbligata
-            
-            refutedBy: null,
-            refutationCard: null,
-            currentResponder: nextPlayerID.toString() 
-        };
-
-        console.log(`IPOTESI REGISTRATA: ${player.name} accusa ${suspectId} in ${currentRoom}`);
-
-        // 5. TELETRASPORTO DEL SOSPETTATO (UC3 - Scenario Principale) 
-        const accusedPlayerKey = Object.keys(G.players).find(
-            key => G.players[key].character === suspectId
-        );
-
-        if (accusedPlayerKey) {
-            const accusedPlayer = G.players[accusedPlayerKey];
-
-            // VERIFICA: Il sospettato è già qui?
-            const isAlreadyHere = accusedPlayer.currentRoom === currentRoom;
-            
-            // Spostiamo il sospettato
-            accusedPlayer.currentRoom = currentRoom;
-            accusedPlayer.position = { ...player.position }; 
-            
-            // REGOLA CRITICA:
-            // Il flag "wasMovedBySuggestion" (che dà diritto a non muoversi al prossimo turno)
-            // si attiva SOLO se il giocatore è stato effettivamente trascinato da altrove.
-            // Se era già nella stanza, non riceve nessun bonus.
-            if (!isAlreadyHere) {
-                accusedPlayer.wasMovedBySuggestion = true;
-                console.log(`🚀 TELETRASPORTO: ${accusedPlayer.name} trascinato in ${currentRoom}`);
-            } else {
-                console.log(`ℹ️ ${accusedPlayer.name} era già nella stanza. Nessun bonus movimento.`);
-            }
-        }
-
-        // 6. GESTIONE ARMA (Opzionale ma coreografica)
-        // Se volessimo gestire anche la posizione dell'arma (non obbligatorio per la logica, ma bello visivamente), lo faremmo qui.
-
-        // 7. FINE FASE ATTIVA
-        // Il turno non finisce, ma entra nella fase "Smentita".
-        // Per ora, nei test, potremmo lasciare endTurn(), ma ricordiamo di toglierlo quando implementiamo la smentita.
-        events.endTurn(); // TEMPORANEO PER TEST
-      },
- },
+   moves: {},
 
 
 
@@ -397,36 +178,370 @@ export const CluedoGame: Game<CluedoGameState> = {
 
 
   turn: {
-    //INIZIO TURNO (setup e controlli)
+    // Definiamo chi può giocare all'inizio del turno
+    // 'currentPlayer' è il comportamento standard (tocca a chi ha i dadi)
+    activePlayers: { currentPlayer: 'action' },
+
+    // INIZIO TURNO (setup e controlli)
     onBegin: ({ G, ctx, events }) => {
-      // Pulizia Dati del Turno Precedente
-      // È fondamentale pulire l'ipotesi vecchia, altrimenti il nuovo giocatore
-      // potrebbe vedere i dati dell'accusa di quello prima.
+      // 1. Pulizia Dati Generali
       G.currentSuggestion = null; 
-      
-      // Opzionale: resetta i dadi visivamente (per pulizia UI)
       G.diceRoll = [0, 0];
 
-      // B. Controllo giocatori eliminati 
       const currentPlayer = G.players[ctx.currentPlayer];
-      
-      // Il sistema continua a ciclare i turni saltando automaticamente i giocatori eliminati
-      if (currentPlayer.isEliminated) {
+
+      if (currentPlayer) {
+        // 2. Reset Logica Movimento
+        currentPlayer.hasMoved = false;
+        currentPlayer.validMoves = [];
+        
+        // 3. Reset flag ingresso manuale (per obbligo ipotesi)
+        currentPlayer.enteredManually = false;
+
+        // NOTA: 'wasMovedBySuggestion' NON si resetta qui, 
+        // serve al Frontend per il modale iniziale.
+      }
+
+      // 4. Salta turno se eliminato
+      if (currentPlayer?.isEliminated) {
         events.endTurn(); 
       }
     },
 
-    // FINE TURNO (reset dei permessi speciali)
+    // FINE TURNO (Pulizia finale)
     onEnd: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-
-      // Scadenza del "bonus passaggio"
-      // Se questo giocatore aveva il permesso di non muoversi perché era stato 
-      // "trascinato" qui da un altro durante un'ipotesi,
-      // ora che ha finito il turno quel permesso scade.
-      // Al prossimo turno, se è ancora qui, dovrà muoversi normalmente.
+      
+      // Il bonus "Passive Move" scade alla fine del turno.
       if (player) {
         player.wasMovedBySuggestion = false;
+      }
+    },
+
+    // CONFIGURAZIONE FASI (Stages)
+    stages: {
+      
+      // FASE 1: AZIONE NORMALE (Default)
+      // Qui il giocatore tira i dadi, si muove, accusa.
+      action: {
+        moves: { 
+            // NOTA IMPORTANTE: per le azioni che vengono proibite a giocatori eliminati, il controllo va fatto qui dentro, non nel frontend. Il frontend è solo un'interfaccia utente, il vero "cervello" del gioco è qui.
+            // In particolare, viene proibita ogni mossa, ad eccezione di revealCard (per mostrare le carte agli altri giocatori e quindi smentire le iptesi altrui)
+            rollDice: ({ G, ctx , random }) => {
+              const die1 = random.Die(6);
+              const die2 = random.Die(6);
+              G.diceRoll = [die1, die2];
+              
+              const player = G.players[ctx.currentPlayer];
+              // Appena decido di tirare i dadi, significa che sto iniziando un nuovo movimento.
+              // Quindi cancello qualsiasi "memoria" del fatto che ero entrato in stanza nel turno precedente.
+              if (player) {
+                  player.enteredManually = false; 
+                  player.hasMoved = false; 
+              }
+              // Usiamo la funzione del collega per calcolare le mosse
+              player.validMoves = getValidMoves(player.position.x, player.position.y, die1 + die2, G.players, player.id);
+              console.log(`Dadi lanciati: ${die1} e ${die2} (Totale: ${die1 + die2}). Mosse calcolate:`, player.validMoves);
+            },
+
+
+            movePawn: ({ G , ctx, events }, x: number, y: number) => {
+
+              const playerID = ctx.currentPlayer;
+              const player = G.players[playerID];
+              const coordKey = `${x},${y}`;
+              // Se il Player è eliminato, blocchiamo il movimento 
+              if (player.isEliminated) return 'INVALID_MOVE';
+              if (player.hasMoved) {console.log("Errore: Il giocatore ha già effettuato un movimento in questo turno."); return 'INVALID_MOVE'; }
+              if (G.diceRoll[0] === 0 && G.diceRoll[1] === 0) {console.log("Errore: I dadi non sono stati lanciati."); return 'INVALID_MOVE'; }
+
+              // // 2. BLOCCO MOVIMENTI MULTIPLI (Stop Obbligatorio)
+              // // Se hai già mosso 1 volta in questo turno, non puoi muovere ancora! Ciò non vuol dire che non puoi fare altre azioni, ma solo che il movimento è limitato a 1 per turno.
+              // if ((ctx.numMoves ?? 0) > 0) {
+              //   return 'INVALID_MOVE';
+              // }
+
+
+              // FIX BUG CLICK STESSA CASELLA
+              // BLOCCO MOSSA NULLA:
+              // Se le coordinate di destinazione (x, y) sono identiche a quelle attuali,
+              // annulliamo l'azione. In questo modo boardgame.io NON incrementa numMoves.
+              if (player.position.x === x && player.position.y === y) {
+                  console.warn("Mossa ignorata: Clic sulla stessa casella.");
+                  return 'INVALID_MOVE'; 
+              }
+
+              if (!player.validMoves.includes(coordKey)) {
+                console.log(`Errore: Mossa non valida verso (${x}, ${y}). Mosse valide sono:`, player.validMoves);
+                return 'INVALID_MOVE';
+              }
+
+              // NUOVO FIX: BLOCCO STESSA STANZA
+              // Verifichiamo se la casella di destinazione è una porta che porta 
+              // alla STESSA stanza in cui il giocatore si trova già.
+              const targetRoom = DOOR_MAPPING[coordKey];
+              const currentRoom = player.currentRoom;
+
+              if (targetRoom && currentRoom && targetRoom === currentRoom) {
+                  console.warn("Mossa illegale: Tentativo di rientrare nella stessa stanza.");
+                  return 'INVALID_MOVE';
+              }
+              
+                    
+
+
+              
+
+              // I muri sono proibiti, non ci si può muovere lì, quindi li blocchiamo subito
+              // Tutto il resto, ovvero HALL, DOOR, START, CENTER va bene
+              // if  (cellType === CELL_TYPES.VOID) {
+              //   return 'INVALID_MOVE'; 
+              // }
+
+              // // Definiamo le zone dove si può stare in tanti, quindi dove è consentita la sovrapposizione (Safe Zones)
+              // // Consentita se è una di queste celle:
+              // const canStack = (
+              //   cellType === CELL_TYPES.CENTER || // Al centro è fondamentale, perchè se un player fa l'accusa finale e sbaglia allora viene eliminato ma rimane al centro, quindi se non fosse consentita la sovrapposizione gli altri non potrebbero più andarci e fare l'accusa finale
+              //   cellType === CELL_TYPES.DOOR      // Sulle porte si deve poter stare in tanti, per facilitare l'ingresso/uscita dalle stanze
+              // );
+            
+              // if (!canStack) { // // Controllo se c'è qualcuno (ignorando me stesso)
+              // // Nota: È importante decidere se i giocatori eliminati bloccano il passaggio.
+              // // Di solito in Cluedo digitale, se uno è eliminato la sua pedina sparisce o diventa trasparente.
+              // // Qui controlliamo solo se c'è una collisione fisica sui dati.
+              //   const isOccupied = Object.values(G.players).some((p: any) => 
+              //     p.id !== ctx.currentPlayer && 
+              //     p.position.x === x &&         
+              //     p.position.y === y
+              //     // !p.isEliminated // OPZIONALE: Se vuoi che i morti non blocchino i corridoi, scommenta questa riga            
+              //   );
+              //   if (isOccupied) return 'INVALID_MOVE'; 
+              // }
+
+              // Aggiorna la posizione del giocatore
+              player.position = { x, y };
+              player.hasMoved = true; 
+              player.validMoves = [];
+
+              // Resettiamo sempre il flag "trascinato" quando ci si muove volontariamente
+              player.wasMovedBySuggestion = false; 
+
+              const cellType = BOARD_LAYOUT[y][x];
+
+              // 4. GESTIONE SPECIFICA DEL CENTRO (ACCUSA FINALE)
+              if (cellType === CELL_TYPES.CENTER) {
+                console.log("Il giocatore è entrato nella Busta Gialla (Centro)!");
+                
+                // Assegniamo una 'stanza fittizia' per attivare la UI dell'Accusa
+                player.currentRoom = 'CENTER_ROOM'; 
+                
+                // Il giocatore deve ora avere il tempo di selezionare le carte e fare l'accusa.
+                return; 
+              }
+
+              // const coordKey = `${x},${y}`;
+              if (DOOR_MAPPING[coordKey]) {
+                player.currentRoom = DOOR_MAPPING[coordKey];
+                // Flag IMPORTANTE: Sono entrato con le mie gambe, quindi DEVO fare un'ipotesi
+                player.enteredManually = true; 
+                console.log(`Player ${player.name} è entrato nella stanza: ${player.currentRoom}`); // Qui non deve chiudere il turno, perché dopo essersi mosso in una stanza il giocatore deve poter formulare un'ipotesi 
+              }
+
+              else {
+                player.currentRoom = undefined; // In corridoio
+                player.enteredManually = false; // Corridoio -> niente ipotesi
+                console.log('Movimento in corridoio completato.');
+                
+                // In corridoio non c'è altro da fare, passo il turno
+                events.endTurn();
+              }
+            },
+
+
+
+
+
+
+              makeHypothesis: ({ G, ctx, events }, suspectId: string, weaponId: string) => {
+                const playerID = ctx.currentPlayer;
+                const player = G.players[playerID];
+
+                // I giocatori eliminati non possono fare ipotesi 
+                if (player.isEliminated) {
+                    return 'INVALID_MOVE';
+                }
+
+                const currentRoom = player.currentRoom;
+
+                // Deve essere fisicamente in una stanza vera 
+                if (!currentRoom || currentRoom === 'CENTER_ROOM') {
+                    return 'INVALID_MOVE'; 
+                }
+
+                // CONTROLLO LEGITTIMITÀ DELL'IPOTESI
+                // Regola: Puoi fare ipotesi SOLO se ti sei mosso in questo turno OPPURE 
+                // se sei stato trascinato qui da un avversario ("wasMovedBySuggestion").
+                // Se eri già qui dall'inizio del turno e nessuno ti ha toccato, devi uscire muovendoti.
+                
+                const hasMovedThisTurn = player.hasMoved || (ctx.numMoves ?? 0) > 0 || player.enteredManually; // Aggiunto enteredManually per sicurezza
+                const wasDraggedHere = player.wasMovedBySuggestion;
+
+                if (!hasMovedThisTurn && !wasDraggedHere) {
+                    console.warn("Mossa illegale, devi muoverti prima di fare un'ipotesi se eri già nella stanza.");
+                    return 'INVALID_MOVE';
+                }
+
+                // SE SIAMO QUI, L'IPOTESI È VALIDA
+
+                // SALVIAMO L'IPOTESI NELLO STATO DI GIOCO
+                const nextPlayerID = (parseInt(playerID) + 1) % ctx.numPlayers;
+                
+                G.currentSuggestion = {
+                    accuserPlayerId: playerID,
+                    suspect: suspectId as SuspectID, 
+                    weapon: weaponId as WeaponID,
+                    room: currentRoom as RoomID,  //  La stanza è obbligata
+                    
+                    refutedBy: null,
+                    refutationCard: null,
+                    currentResponder: nextPlayerID.toString() 
+                };
+
+                console.log(`IPOTESI REGISTRATA: ${player.name} accusa ${suspectId} in ${currentRoom}`);
+
+                // 5. TELETRASPORTO DEL SOSPETTATO (UC3 - Scenario Principale) 
+                const accusedPlayerKey = Object.keys(G.players).find(
+                    key => G.players[key].character === suspectId
+                );
+
+                if (accusedPlayerKey) {
+                    const accusedPlayer = G.players[accusedPlayerKey];
+
+                    // VERIFICA: Il sospettato è già qui?
+                    const isAlreadyHere = accusedPlayer.currentRoom === currentRoom;
+                    
+                    // Spostiamo il sospettato
+                    accusedPlayer.currentRoom = currentRoom;
+                    accusedPlayer.position = { ...player.position }; 
+                    
+                    // REGOLA CRITICA:
+                    // Il flag "wasMovedBySuggestion" (che dà diritto a non muoversi al prossimo turno)
+                    // si attiva SOLO se il giocatore è stato effettivamente trascinato da altrove.
+                    // Se era già nella stanza, non riceve nessun bonus.
+                    if (!isAlreadyHere) {
+                        accusedPlayer.wasMovedBySuggestion = true;
+                        console.log(`🚀 TELETRASPORTO: ${accusedPlayer.name} trascinato in ${currentRoom}`);
+                    } else {
+                        console.log(`ℹ️ ${accusedPlayer.name} era già nella stanza. Nessun bonus movimento.`);
+                    }
+                }
+
+                // 6. GESTIONE ARMA (Opzionale ma coreografica)
+                // Se volessimo gestire anche la posizione dell'arma (non obbligatorio per la logica, ma bello visivamente), lo faremmo qui.
+
+                // 7. FINE FASE ATTIVA
+                // Il turno non finisce, ma entra nella fase "Smentita".
+                // Per ora, nei test, potremmo lasciare endTurn(), ma ricordiamo di toglierlo quando implementiamo la smentita.
+                events.endTurn(); // TEMPORANEO PER TEST
+              },
+
+
+
+              
+
+
+
+
+              makeAccusation: ({ G, ctx, events }, suspectId: string, weaponId: string, roomId: string) => { // La funzione riceve i 3 ID che arrivano dal modale (suspectId, weaponId, roomId)
+                const playerID = ctx.currentPlayer;
+                const player = G.players[playerID];
+                // Se il Player è eliminato, blocchiamo nuove accuse 
+                if (player.isEliminated) return 'INVALID_MOVE';
+
+                // Se non è nella stanza centrale (Busta Gialla), non può accusare
+                // Questo previene bug o chiamate illegali dal frontend
+                if (player.currentRoom !== 'CENTER_ROOM') {
+                    console.warn(`[CHEAT] ${player.name} ha provato ad accusare da ${player.currentRoom}`);
+                    return 'INVALID_MOVE';
+                }
+
+                console.log(`[SERVER] Accusa ricevuta da ${player.name}:`, { suspectId, weaponId, roomId });
+
+                // 1. Recuperiamo la Soluzione dalla Busta Gialla
+                // G.secretEnvelope è un array di 3 oggetti Card (inizializzato sopra, nel setup)
+                const envelope = G.secretEnvelope;
+
+                // 2. Verifichiamo se le carte corrispondono
+                // Controlliamo se l'ID ricevuto esiste tra le carte della busta
+                const isSuspectCorrect = envelope.some(card => card.id === suspectId);
+                const isWeaponCorrect = envelope.some(card => card.id === weaponId);
+                const isRoomCorrect = envelope.some(card => card.id === roomId);
+
+                // PREPARIAMO LA SOLUZIONE VERA (PER ENDGAME)
+                // Indipendentemente da cosa ha detto il giocatore, la verità è nella busta!
+                // Usiamo .find per pescare la carta giusta per tipo.
+                const realSuspect = envelope.find(c => c.type === 'SUSPECT')?.id || 'Error';
+                const realWeapon = envelope.find(c => c.type === 'WEAPON')?.id || 'Error';
+                const realRoom = envelope.find(c => c.type === 'ROOM')?.id || 'Error';
+
+                const realSolution = { 
+                    suspectId: realSuspect, 
+                    weaponId: realWeapon, 
+                    roomId: realRoom 
+                };
+
+                // 3. Logica di Vittoria o Sconfitta
+                if (isSuspectCorrect && isWeaponCorrect && isRoomCorrect) {
+                  // VITTORIA
+                  console.log(`[SERVER] VITTORIA! ${player.name} ha risolto il caso.`);
+                  
+                  // Termina immediatamente la partita dichiarando il vincitore.
+                  // Passiamo anche la soluzione per poterla mostrare a tutti nella schermata di Game Over.
+                  events.endGame({
+                    winner: playerID,
+                    solution: realSolution // Passiamo la soluzione vera (che coincide con l'accusa, ma per sicurezza usiamo quella della busta)
+                  });
+
+                } else {
+                  // SCONFITTA (ELIMINAZIONE)
+                  console.log(`[SERVER] Accusa ERRATA. ${player.name} è eliminato.`);
+
+                  // A. Marchiamo il giocatore come eliminato
+                  // Questo è fondamentale: impedisce al frontend di mostrare ancora il modale
+                  // e impedirà al giocatore di muoversi nei turni futuri (se gestisci il check su movePawn).
+                  player.isEliminated = true;
+
+                  /// B. CONTROLLO "GAME OVER TOTALE"
+                  // Contiamo quanti giocatori sono ancora in gioco (non eliminati)
+                  const activePlayersCount = Object.values(G.players).filter(p => !p.isEliminated).length;
+
+                  if (activePlayersCount === 0) {
+                      console.log("GAME OVER: Tutti i detective hanno fallito.");
+                      // Nessuno ha vinto. La partita finisce.
+                      events.endGame({
+                          winner: null, // Null indica che ha vinto il crimine
+                          solution: realSolution // Qui passiamo la soluzione VERA, non quella sbagliata del giocatore
+                      });
+                  } else {
+                      // C. Se c'è ancora qualcuno vivo, il gioco continua
+                      events.endTurn();
+                  }
+                }
+              },
+          
+       }
+      },
+
+      // FASE 2: SMENTITA (Refutation)
+      // Si attiva dopo una makeHypothesis.
+      // Qui tocca a UN ALTRO giocatore (quello a sinistra) rispondere.
+      refutation: {
+        moves: { 
+            // Qui ci andrà la funzione per mostrare la carta (la faremo dopo)
+            // refuteSuggestion, 
+            // cannotRefute 
+        }
+        // Nota: Non mettiamo movePawn qui, perché chi smentisce non può muoversi!
       }
     }
   },

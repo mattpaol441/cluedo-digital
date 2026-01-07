@@ -19,14 +19,15 @@ const Pawn: React.FC<PawnProps> = ({ id, color, isCurrentTurn = false }) => {
         <div
             className={`
                 /* Dimension and Shape */
-                w-[65%] h-[65%] 
+                /* w-[65%] h-[65%] */
+                w-full h-full
                 rounded-full 
                 aspect-square
                 
                 /* Positioning */
-                m-auto 
+                /* m-auto */
                 relative 
-                top-[15%] left-[5%]
+                /* top-[15%] left-[5%] */
                 z-10
 
                 /* Base Styling */
@@ -37,7 +38,8 @@ const Pawn: React.FC<PawnProps> = ({ id, color, isCurrentTurn = false }) => {
                 /* Current Turn Logic */
                 ${isCurrentTurn 
                     ? `
-                        scale-[1.15] 
+                        /* scale-[1.15] */
+                        scale-110 
                         z-20 
                         border-[#ffff00] 
                         ${shadowActive} 

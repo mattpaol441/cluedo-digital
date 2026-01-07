@@ -36,17 +36,30 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID 
     setWantsToInvestigate(false);
   }, [ctx.currentPlayer]);
 
+  // NOTA SU QUESTI STATI:
+  // Non li mettiamo in G (stato globale del gioco) perché non servono a tutti i giocatori, ma solo a chi sta giocando (playerID).
+  // Inoltre, sono stati "temporanei" che servono solo per gestire l'interfaccia utente e non influenzano le regole del gioco.
+  // Metterli in G significherebbe complicare inutilmente lo stato globale del gioco con dati che non interessano a tutti.
+  // Sappiamo che quando il giocatore cambia, React fa primo render con vecchi stati, poi esegue l'useEffect che resetta gli stati, e fa un secondo render con gli stati resettati, ma non è un problema perché l'utente non vede nulla in quei due render veloci.
+  
 
   const myPlayer = playerID ? G.players[playerID] : null;
 
   // 1. PRIORITÀ ASSOLUTA: GAME OVER
-  // Se la partita è finita, copriamo tutto.
   if (ctx.gameover) {
-    const winnerName = G.players[ctx.gameover.winner]?.name || 'Sconosciuto';
+    // Verifichiamo se c'è un vero vincitore (ID non null)
+    const hasWinner = ctx.gameover.winner !== null;
+
+    // Calcoliamo il nome da mostrare
+    const winnerName = hasWinner 
+        ? G.players[ctx.gameover.winner]?.name 
+        : "Il colpevole è fuggito!";
+
     return (
         <GameOverModal 
             winnerName={winnerName} 
-            solution={ctx.gameover.solution} 
+            solution={ctx.gameover.solution}
+            isVictory={hasWinner} // <--- NUOVA PROP: Passiamo se è una vittoria o no
         />
     );
   }
@@ -76,11 +89,14 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID 
   const isInRoom = myPlayer.currentRoom && myPlayer.currentRoom !== 'CENTER_ROOM';
   const suggestionNotMadeYet = !G.currentSuggestion;
   
-  // A. Ingresso Standard: Mi sono mosso con i dadi ed entrato in stanza
-  const enteredManually = (ctx.numMoves || 0) > 0;
+  /// FIX CRITICO:
+  // Prima usavamo: const enteredManually = (ctx.numMoves || 0) > 0;
+  // Questo era sbagliato perché ctx.numMoves scatta appena tiri i dadi.
+  // Ora usiamo la variabile specifica del giocatore che diventa true SOLO DOPO che la pedina è entrata.
+  const hasEnteredRoom = myPlayer.enteredManually; 
   
-  // B. Ingresso Passivo: Sono stato trascinato (e non ho ancora mosso i dadi)
-  const wasDraggedHere = myPlayer.wasMovedBySuggestion && !enteredManually;
+  // B. Ingresso Passivo: Sono stato trascinato (e non sono entrato a piedi)
+  const wasDraggedHere = myPlayer.wasMovedBySuggestion && !hasEnteredRoom;
 
   // SCENARIO 1: MODALE DI SCELTA (BIVIO)
   // Mostra SE: 
@@ -114,7 +130,7 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID 
       isMyTurn && 
       isInRoom && 
       suggestionNotMadeYet && 
-      (enteredManually || (wasDraggedHere && wantsToInvestigate));
+      (hasEnteredRoom || (wasDraggedHere && wantsToInvestigate));
 
   if (showHypothesis) {
      return (
@@ -138,41 +154,6 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID 
       />
     );
   }
-
-  // // 3. BANNER ELIMINAZIONE
-  // // Nota: Questo non è un "return" esclusivo se vuoi mostrare altro insieme, 
-  // // ma per ora va bene così o puoi usare un React Fragment <></> per ritornare più cose.
-  // if (myPlayer.isEliminated) {
-  //    return <EliminationModal />;
-  // }
-
-  // ... Qui aggiungerai HypothesisModal, RevealCardModal, etc.
- 
-  // --- LOGICA 2: FORMULAZIONE IPOTESI ---
-  // Esempio: Se sono in una stanza, è il mio turno, e NON ho ancora fatto ipotesi
-  /*
-  const showHypothesis = 
-      ctx.currentPlayer === playerID &&
-      myPlayer.currentRoom && 
-      myPlayer.currentRoom !== 'CENTER_ROOM' &&
-      !G.currentSuggestion; // Se non c'è già un'ipotesi in corso
-
-  if (showHypothesis) {
-     return <HypothesisModal ... />;
-  }
-  */
-
-  // --- LOGICA 3: SMENTITA (Mostra Carta) ---
-  // Esempio: Se c'è un'ipotesi attiva E tocca a me smentire
-  /*
-  const showReveal = 
-      G.currentSuggestion &&
-      ctx.activePlayers?.[playerID] === 'respondToSuggestion'; // Usa gli Stage di boardgame.io
-      
-  if (showReveal) {
-     return <RevealCardModal ... />;
-  }
-  */
 
   // Se nessuna condizione è vera, non mostrare nulla
   return null;

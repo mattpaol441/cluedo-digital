@@ -6,7 +6,9 @@ import {
     DOOR_MAPPING, 
     STARTING_POSITIONS,
     CHARACTER_COLORS,
-    type CluedoGameState } from "@cluedo-digital/shared";
+    type CluedoGameState, 
+    // type Player 
+} from "@cluedo-digital/shared";
 
 import Cell from "./Cell";
 import Pawn from "./Pawn";
@@ -66,10 +68,29 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
     }, [G.players]);
 
     const handleCellClick = (x: number, y: number) => {
-        // Check if the cell is VOID (WALL) or CENTER
-        if (BOARD_LAYOUT[y][x] === CELL_TYPES.VOID) { // Rimosso il blocco per CENTER_ROOM dato che ci si può entrare normalmente
-            return; // Nothing if VOID or CENTER
+        const currentPlayer = G.players[ctx.currentPlayer];
+        const key = getCoordKey(x, y);
+
+        // Controllo validità mosse 
+        if (!currentPlayer.validMoves.includes(key)) {
+             console.log(`Cella (${x}, ${y}) non è una mossa valida.`);
+             return;
         }
+        // // Check if the cell is VOID (WALL) or CENTER
+        // if (BOARD_LAYOUT[y][x] === CELL_TYPES.VOID) { // Rimosso il blocco per CENTER_ROOM dato che ci si può entrare normalmente
+        //     return; 
+        // }
+
+        // Controlliamo se la casella cliccata è una porta della mia stessa stanza.
+        // Se sì, blocchiamo il click per evitare errori del server e confusione UI.
+        const targetRoom = DOOR_MAPPING[key]; 
+        const currentRoom = currentPlayer.currentRoom; 
+
+        if (targetRoom && currentRoom && targetRoom === currentRoom) {
+            console.warn("Sei già in questa stanza! Devi uscire.");
+            return; 
+        }
+        
         moves.movePawn(x, y);
     };
 
@@ -118,6 +139,10 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
                         // --- 3. RECUPERO TUTTI I GIOCATORI ---
                         const playersHere = playersByCell[coordKey] || []; // Con questa riga recuperiamo la lista di TUTTI i giocatori in questa cella
 
+                        // Per l'highlight 
+                        const currentPlayer = G.players[ctx.currentPlayer];
+                        const isValidMove = currentPlayer.validMoves.includes(coordKey);
+
                         return (
                             <Cell
                                 key={coordKey}
@@ -127,6 +152,7 @@ const Board: React.FC<CluedoBoardProps> = ({ G, ctx, moves }) => {
                                 doorTo={doorTo}
                                 startForSuspect={startFor}
                                 onClick={handleCellClick}
+                                isHighlighted={isValidMove} // Passiamo l'highlight alla cella
                             >
                                 {/* Indicatore Start (Opzionale, se vuoi vederlo visivamente) */}
                                 {startFor && startColor && (

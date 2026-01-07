@@ -7,6 +7,11 @@ import Board from "../game/Board";
 import PlayerSidebar from "../components/PlayerSidebar";
 import { Notebook } from "../components/Notebook";
 import { GameModals } from "../components/GameModals"; 
+// Nuovi componenti 
+import GameCard from "../game/GameCard";
+import DiceRoller from "../game/DiceRoller";
+import { getCardImage } from "../utils/assets"; // Assicurati di avere questo utils
+import { Dices } from "lucide-react";
 
 type GamePageProps = BoardProps<CluedoGameState>;
 
@@ -21,10 +26,16 @@ const GamePage: React.FC<GamePageProps> = (props) => {
 
     // Identify my player
     const myPlayer = playerID ? G.players[playerID] : null;
+
+    const [d1, d2] = G.diceRoll;
+    const hasRolled = d1 !== 0 && d2 !== 0;
     
     return (
         // Main Container
         <div className="h-screen w-screen bg-slate-900 flex flex-col overflow-hidden font-sans text-white relative">
+
+            {/* 1. DICE ROLLER OVERLAY (Nuovo) */}
+            <DiceRoller G={G} ctx={ctx} moves={moves} playerID={playerID} />
 
             {/* IL GESTORE UNICO: Si occupa di Vittoria, Sconfitta, Accuse, ecc. */}
             {/* React ridisegna GamePage, la GamePage riceve i nuovi dati (G, ctx) ma non li legge nemmeno, si limita a passarli al componente GameModals. */}
@@ -40,6 +51,24 @@ const GamePage: React.FC<GamePageProps> = (props) => {
                 <h1 className="text-xl font-bold tracking-widest text-slate-100">
                     CLUEDO <span className="text-red-600">DIGITAL</span>
                 </h1>
+
+                {/* HUD DADI (Nuovo e molto utile) */}
+                <div className="flex items-center gap-4 bg-slate-800 px-4 py-1 rounded-full border border-slate-700">
+                    <span className="text-slate-400 text-sm font-bold uppercase mr-2">Dadi:</span>
+                                        
+                    {hasRolled ? (
+                        <div className="flex gap-2">
+                           <div className="w-8 h-8 bg-white text-black font-bold flex items-center justify-center rounded shadow">{d1}</div>
+                           <div className="w-8 h-8 bg-white text-black font-bold flex items-center justify-center rounded shadow">{d2}</div>
+                           <span className="ml-2 font-bold text-yellow-400 text-lg">= {d1 + d2}</span>
+                        </div>
+                    ) : (
+                        <div className="flex gap-1 opacity-30">
+                           <Dices className="w-6 h-6" />
+                           <span className="text-sm italic">In attesa...</span>
+                        </div>
+                    )}
+                </div>
                 
                 <div className="px-4 py-1 bg-slate-800 rounded-full border border-slate-700 text-sm font-medium">
                     Turno: <span className="text-yellow-400">{ctx.turn}</span>
@@ -91,14 +120,15 @@ const GamePage: React.FC<GamePageProps> = (props) => {
                     </span>
                     
                     {myPlayer?.hand.length ? (
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 items-end h-28 pb-2">
                             {myPlayer.hand.map((card) => (
-                                <div 
-                                    key={card.id} 
-                                    className="bg-white text-slate-900 w-24 h-16 rounded shadow-lg flex items-center justify-center text-xs font-bold border-2 border-slate-300 hover:-translate-y-2 transition-transform duration-200 cursor-default"
-                                >
-                                    {card.name}
-                                </div>
+                                <GameCard
+                                    key={card.id}
+                                    card={card}
+                                    image={getCardImage(card)}
+                                    size="SMALL"
+                                    className="hover:-translate-y-6 transition-transform duration-200"
+                                />
                             ))}
                         </div>
                     ) : (
