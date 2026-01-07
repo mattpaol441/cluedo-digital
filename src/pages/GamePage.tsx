@@ -17,7 +17,7 @@ type GamePageProps = BoardProps<CluedoGameState>;
 
 const GamePage: React.FC<GamePageProps> = (props) => {
     // Destructuring props
-    const { G, ctx, playerID, matchID, moves } = props;
+    const { G, ctx, playerID, matchID, moves, events } = props;
 
     // Data preparation
     const playersList = useMemo(() => {
@@ -42,7 +42,8 @@ const GamePage: React.FC<GamePageProps> = (props) => {
             <GameModals 
                 G={G} 
                 ctx={ctx} 
-                moves={moves} 
+                moves={moves}
+                events={events} 
                 playerID={playerID} 
             />
             

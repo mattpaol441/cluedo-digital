@@ -6,12 +6,14 @@ import { AccusationModal } from './AccusationModal';
 import { GameOverModal } from './GameOverModal';      
 import { EliminationModal } from './EliminationModal';
 import { HypothesisModal } from './HypothesisModal';
-import { TurnChoiceModal } from './TurnChoiceModal'; 
+import { TurnChoiceModal } from './TurnChoiceModal';
+import { RefutationModal } from './RefutationModal'; 
 
 interface GameModalsProps {
   G: CluedoGameState;
   ctx: Ctx;
   moves: any;
+  events?: any;
   playerID: string | null;
 }
 
@@ -19,7 +21,7 @@ interface GameModalsProps {
 // Se GameModals decide di ritornare <AccusationModal />, React prende quel pezzo di UI e lo "incolla" dentro GamePage esattamente dove abbiamo posizionato il tag <GameModals />.
 // Poiché GameModals è posizionato all'inizio del div di GamePage ed ha css fixed o absolute, apparirà sopra a tutto il resto.
 
-export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID }) => {
+export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID, events }) => {
 
   // STATI LOCALI PER LA SCELTA DEL TURNO (BIVIO IPOTESI/MOVIMENTO)
   // Questi stati servono per ricordare la scelta fatta dall'utente nel TurnChoiceModal.
@@ -29,12 +31,20 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID 
   // 'wantsToInvestigate': diventa true se l'utente sceglie la lente d'ingrandimento
   const [wantsToInvestigate, setWantsToInvestigate] = useState(false);
 
+  const [showRefutationResult, setShowRefutationResult] = useState(false);
+
   // RESET QUANDO CAMBIA IL TURNO 
   // Ogni volta che cambia il giocatore corrente, resettiamo la memoria delle scelte
   useEffect(() => {
     setDecisionMade(false);
     setWantsToInvestigate(false);
   }, [ctx.currentPlayer]);
+
+  useEffect(() => {
+    if (G.lastRefutation) {
+      setShowRefutationResult(true);
+    }
+  }, [G.lastRefutation]);
 
   // NOTA SU QUESTI STATI:
   // Non li mettiamo in G (stato globale del gioco) perché non servono a tutti i giocatori, ma solo a chi sta giocando (playerID).
@@ -59,13 +69,28 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID 
         <GameOverModal 
             winnerName={winnerName} 
             solution={ctx.gameover.solution}
-            isVictory={hasWinner} // <--- NUOVA PROP: Passiamo se è una vittoria o no
+            isVictory={hasWinner} 
         />
     );
   }
 
   // Se non ho un player (spettatore), non mostro altro
   if (!myPlayer) return null;
+
+  // SMENTITA - Priorità Alta
+  // Controlliamo se c'è un suggerimento attivo o se dobbiamo mostrare un risultato
+  if (G.currentSuggestion || (G.lastRefutation && showRefutationResult)) {
+      return (
+          <RefutationModal 
+             G={G}
+             playerID={playerID}
+             moves={moves}
+             events={events}
+             showResult={showRefutationResult}
+             onCloseResult={() => setShowRefutationResult(false)}
+          />
+      );
+  }
 
   // PRIORITÀ ALTA: SEI ELIMINATO?
   // Spostato qui. Se è eliminato, vede il banner e BASTA.

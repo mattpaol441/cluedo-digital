@@ -5,8 +5,8 @@ import {
   type Player,
   type Card, 
   type SuspectID,
-  type RoomID, 
-  type WeaponID,
+  // type RoomID, 
+  // type WeaponID,
  // type SuspectCard, 
  // type WeaponCard,
  // type RoomCard,
@@ -35,6 +35,7 @@ import {
 } from "@cluedo-digital/shared";
 
 import { getValidMoves } from '../utils/movementLogic.ts';
+import { findNextRefuter } from '../utils/logic.ts'; 
 
 // Funzione per distribuire le carte
 const dealCards = (random: any, numPlayers: number): {secretEnvelope: Card[], playerHands: Card[][], tableCards: Card[]} => {
@@ -158,6 +159,7 @@ export const CluedoGame: Game<CluedoGameState> = {
       players: players,
       diceRoll: [0, 0], 
       currentSuggestion: null,
+      lastRefutation: null
       };
   },
 
@@ -185,6 +187,7 @@ export const CluedoGame: Game<CluedoGameState> = {
     // INIZIO TURNO (setup e controlli)
     onBegin: ({ G, ctx, events }) => {
       // 1. Pulizia Dati Generali
+      G.lastRefutation = null;
       G.currentSuggestion = null; 
       G.diceRoll = [0, 0];
 
@@ -383,7 +386,7 @@ export const CluedoGame: Game<CluedoGameState> = {
                 // se sei stato trascinato qui da un avversario ("wasMovedBySuggestion").
                 // Se eri già qui dall'inizio del turno e nessuno ti ha toccato, devi uscire muovendoti.
                 
-                const hasMovedThisTurn = player.hasMoved || (ctx.numMoves ?? 0) > 0 || player.enteredManually; // Aggiunto enteredManually per sicurezza
+                const hasMovedThisTurn = player.hasMoved || (ctx.numMoves ?? 0) > 0 || player.enteredManually; // Aggiunto enteredManually per sicurezza, anche se teoricamente hasMoved dovrebbe coprire quel caso, infatti potremmo togliere anche ctx.numMoves, lasciato per sicurezza. 
                 const wasDraggedHere = player.wasMovedBySuggestion;
 
                 if (!hasMovedThisTurn && !wasDraggedHere) {
@@ -391,59 +394,95 @@ export const CluedoGame: Game<CluedoGameState> = {
                     return 'INVALID_MOVE';
                 }
 
-                // SE SIAMO QUI, L'IPOTESI È VALIDA
-
-                // SALVIAMO L'IPOTESI NELLO STATO DI GIOCO
-                const nextPlayerID = (parseInt(playerID) + 1) % ctx.numPlayers;
                 
-                G.currentSuggestion = {
-                    accuserPlayerId: playerID,
-                    suspect: suspectId as SuspectID, 
-                    weapon: weaponId as WeaponID,
-                    room: currentRoom as RoomID,  //  La stanza è obbligata
-                    
-                    refutedBy: null,
-                    refutationCard: null,
-                    currentResponder: nextPlayerID.toString() 
-                };
-
                 console.log(`IPOTESI REGISTRATA: ${player.name} accusa ${suspectId} in ${currentRoom}`);
 
-                // 5. TELETRASPORTO DEL SOSPETTATO (UC3 - Scenario Principale) 
+                // 5. TELETRASPORTO DEL SOSPETTATO 
                 const accusedPlayerKey = Object.keys(G.players).find(
-                    key => G.players[key].character === suspectId
+                    key => G.players[key].character === suspectId || G.players[key].name === suspectId
                 );
 
                 if (accusedPlayerKey) {
                     const accusedPlayer = G.players[accusedPlayerKey];
+                    if (accusedPlayer.id !== playerID) {
+                      // VERIFICA: Il sospettato è già qui?
+                      const isAlreadyHere = accusedPlayer.currentRoom === currentRoom;
+                      
+                      // Spostiamo il sospettato
+                      accusedPlayer.currentRoom = currentRoom;
+                      accusedPlayer.position = { ...player.position }; 
+                      
+                      // REGOLA CRITICA:
+                      // Il flag "wasMovedBySuggestion" (che dà diritto a non muoversi al prossimo turno)
+                      // si attiva SOLO se il giocatore è stato effettivamente trascinato da altrove.
+                      // Se era già nella stanza, non riceve nessun bonus.
+                      if (!isAlreadyHere) {
+                          accusedPlayer.wasMovedBySuggestion = true;
+                          console.log(`TELETRASPORTO: ${accusedPlayer.name} trascinato in ${currentRoom}`);
+                      } else {
+                          console.log(`! ${accusedPlayer.name} era già nella stanza. Nessun bonus movimento.`);
+                      }
+                  }
+                }  
 
-                    // VERIFICA: Il sospettato è già qui?
-                    const isAlreadyHere = accusedPlayer.currentRoom === currentRoom;
-                    
-                    // Spostiamo il sospettato
-                    accusedPlayer.currentRoom = currentRoom;
-                    accusedPlayer.position = { ...player.position }; 
-                    
-                    // REGOLA CRITICA:
-                    // Il flag "wasMovedBySuggestion" (che dà diritto a non muoversi al prossimo turno)
-                    // si attiva SOLO se il giocatore è stato effettivamente trascinato da altrove.
-                    // Se era già nella stanza, non riceve nessun bonus.
-                    if (!isAlreadyHere) {
-                        accusedPlayer.wasMovedBySuggestion = true;
-                        console.log(`🚀 TELETRASPORTO: ${accusedPlayer.name} trascinato in ${currentRoom}`);
-                    } else {
-                        console.log(`ℹ️ ${accusedPlayer.name} era già nella stanza. Nessun bonus movimento.`);
-                    }
-                }
-
-                // 6. GESTIONE ARMA (Opzionale ma coreografica)
-                // Se volessimo gestire anche la posizione dell'arma (non obbligatorio per la logica, ma bello visivamente), lo faremmo qui.
-
+                
                 // 7. FINE FASE ATTIVA
                 // Il turno non finisce, ma entra nella fase "Smentita".
-                // Per ora, nei test, potremmo lasciare endTurn(), ma ricordiamo di toglierlo quando implementiamo la smentita.
-                events.endTurn(); // TEMPORANEO PER TEST
-              },
+
+                // CERCA SMENTITORE (Auto-Skip) 
+                // Invece di assegnare semplicemente il prossimo giocatore, usiamo la funzione definita in utils/logic.ts
+                
+                // Resettiamo eventuali risultati vecchi per pulire l'interfaccia
+                G.lastRefutation = null; 
+
+                const result = findNextRefuter(
+                    G, 
+                    ctx, 
+                    Number(playerID), 
+                    { s: suspectId, w: weaponId, r: currentRoom }
+                );
+
+                if (result) {
+                    // CASO A: ABBIAMO TROVATO QUALCUNO CHE PUÒ SMENTIRE
+                    console.log(`[SERVER] Smentita richiesta a PlayerID: ${result.playerID}`);
+
+                    G.currentSuggestion = {
+                        suggesterId: playerID,      
+                        suspect: suspectId as any,
+                        weapon: weaponId as any,
+                        room: currentRoom as any,
+                        
+                        currentResponder: result.playerID,
+                        matchingCards: result.matchingCards // SALVIAMO LE CARTE CHE PUÒ MOSTRARE
+                    };
+
+                    // ATTIVIAMO LO STAGE: Il gioco si congela e tocca solo a result.playerID
+                    events.setActivePlayers({
+                        value: {
+                            [result.playerID]: 'refutationStage' 
+                        }
+                    });
+
+                } else {
+                    // CASO B: NESSUNO HA LE CARTE (Auto-Skip totale)
+                    console.log("[SERVER] Nessuno può smentire l'ipotesi.");
+
+                    // Salviamo il risultato vuoto così il frontend può dire "Nessuna smentita!"
+                    G.lastRefutation = {
+                        suggesterId: playerID,
+                        refuterId: null,
+                        cardShown: null
+                    };
+                    
+                    G.currentSuggestion = null;
+
+                    // Qui il turno finisce (o lasciamo che l'utente clicchi "Fine Turno" dopo aver visto il messaggio)
+                    // Per ora chiudiamo il turno per mantenere il flusso veloce
+                
+                // events.endTurn(); // TEMPORANEO PER TEST
+              }
+              },  
+            
 
 
 
@@ -535,13 +574,49 @@ export const CluedoGame: Game<CluedoGameState> = {
       // FASE 2: SMENTITA (Refutation)
       // Si attiva dopo una makeHypothesis.
       // Qui tocca a UN ALTRO giocatore (quello a sinistra) rispondere.
-      refutation: {
+      refutationStage: { 
         moves: { 
-            // Qui ci andrà la funzione per mostrare la carta (la faremo dopo)
-            // refuteSuggestion, 
-            // cannotRefute 
+            // NOTA: Usiamo playerID (chi sta agendo) e NON ctx.currentPlayer (che è il giocatore del turno, cioè il suggester)
+            refuteSuggestion: ({ G, 
+              // ctx, 
+              events, 
+              playerID }, cardIdToReveal: string) => {
+                const suggestion = G.currentSuggestion;
+                
+                // Sicurezza: Se non c'è nessuna ipotesi attiva, esci
+                if (!suggestion) return;
+
+                // Sicurezza: Il giocatore possiede davvero quella carta tra quelle richieste?
+                if (!suggestion.matchingCards.includes(cardIdToReveal)) {
+                    console.warn(`[CHEAT] Tentativo di mostrare carta non valida: ${cardIdToReveal}`);
+                    return 'INVALID_MOVE';
+                }
+
+                console.log(`[SERVER] Player ${playerID} mostra la carta ${cardIdToReveal}`);
+
+                // Recuperiamo l'oggetto carta completo dalla mano del giocatore che sta smentendo
+                const player = G.players[playerID!];
+                const cardObj = player.hand.find(c => c.id === cardIdToReveal);
+
+                // 1. Salviamo il risultato per mostrarlo al Frontend
+                G.lastRefutation = {
+                    suggesterId: suggestion.suggesterId,
+                    refuterId: playerID!,
+                    cardShown: cardObj || null // Passiamo l'oggetto carta
+                };
+
+                // 2. Puliamo lo stato di attesa
+                G.currentSuggestion = null;
+
+                // 3. FINE DEL TURNO
+                // Poiché siamo nel turno del "Suggester" (ma sta agendo il "Refuter"),
+                // chiamare endTurn() chiude il turno del Suggester e passa la mano al prossimo.
+                // events.endTurn(); 
+                
+                // Puliamo anche i giocatori attivi speciali
+                events.setActivePlayers({ value: {} });
+            }
         }
-        // Nota: Non mettiamo movePawn qui, perché chi smentisce non può muoversi!
       }
     }
   },
