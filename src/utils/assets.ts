@@ -9,24 +9,24 @@ import plumAvatar from "../assets/suspectAvatars/plumAvatar.jpg";
 import scarletAvatar from "../assets/suspectAvatars/scarletAvatar.jpg";
 
 //Import weapon card images
-import candlestickImage from "../assets/weaponCard/candlestickCluedo.png";
-import daggerImage from "../assets/weaponCard/daggerCluedo.png";
-import leadPipeImage from "../assets/weaponCard/leadpipeCluedo.png";
-import revolverImage from "../assets/weaponCard/revolverCluedo.png";
-import ropeImage from "../assets/weaponCard/ropeCluedo.png";
-import wrenchImage from "../assets/weaponCard/wrenchCluedo.png";
+import candlestickImage from "../assets/weaponCards/candlestickCluedo.png";
+import daggerImage from "../assets/weaponCards/daggerCluedo.png";
+import leadPipeImage from "../assets/weaponCards/leadpipeCluedo.png";
+import revolverImage from "../assets/weaponCards/revolverCluedo.png";
+import ropeImage from "../assets/weaponCards/ropeCluedo.png";
+import wrenchImage from "../assets/weaponCards/wrenchCluedo.png";
 
 
 // Import room card images
-import ballroomImage from "../assets/roomCard/ballroomCluedo.jpg";
-import billiardRoomImage from "../assets/roomCard/billiardroomCluedo.jpg";
-import conservatoryImage from "../assets/roomCard/conservatoryCluedo.jpg";
-import diningRoomImage from "../assets/roomCard/diningroomCluedo.jpg";
-import hallImage from "../assets/roomCard/hallCluedo.jpg";
-import kitchenImage from "../assets/roomCard/kitchenCluedo.jpg";
-import libraryImage from "../assets/roomCard/libraryCluedo.jpg";
-import loungeImage from "../assets/roomCard/loungeCluedo.jpg";
-import studyImage from "../assets/roomCard/studyCluedo.jpg";
+import ballroomImage from "../assets/roomCards/ballroomCluedo.jpg";
+import billiardRoomImage from "../assets/roomCards/billiardroomCluedo.jpg";
+import conservatoryImage from "../assets/roomCards/conservatoryCluedo.jpg";
+import diningRoomImage from "../assets/roomCards/diningroomCluedo.jpg";
+import hallImage from "../assets/roomCards/hallCluedo.jpg";
+import kitchenImage from "../assets/roomCards/kitchenCluedo.jpg";
+import libraryImage from "../assets/roomCards/libraryCluedo.jpg";
+import loungeImage from "../assets/roomCards/loungeCluedo.jpg";
+import studyImage from "../assets/roomCards/studyCluedo.jpg";
 
 // Mapping 
 const AVATAR_MAP: Record<SuspectID, string> = {
