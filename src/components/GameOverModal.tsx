@@ -1,5 +1,9 @@
 import React from 'react';
 // import type { CluedoGameState } from '@cluedo-digital/shared';
+// import { getSuspectName, getWeaponName, getRoomName } from '@cluedo-digital/shared';
+import GameCard from '../game/GameCard';
+import { getCardImage } from '../utils/assets'; // Assicurati di avere questo import corretto
+import { getCardById } from '@cluedo-digital/shared';
 
 interface GameOverModalProps {
   winnerName: string;
@@ -9,7 +13,7 @@ interface GameOverModalProps {
 
 export const GameOverModal: React.FC<GameOverModalProps> = ({ winnerName, solution, isVictory }) => {
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white p-8 rounded-lg shadow-2xl max-w-lg w-full text-center border-4 border-slate-800">
         
         {/* TITOLO DINAMICO */}
@@ -26,13 +30,25 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({ winnerName, soluti
 
         {/* Qui sotto c'è la sezione che mostra la soluzione (le 3 carte), quella lasciala uguale */}
         {solution && (
-            <div className="bg-slate-100 p-4 rounded-lg mb-6">
-                <h3 className="text-sm uppercase font-bold text-slate-500 mb-2">La Soluzione Reale Era:</h3>
-                <div className="flex justify-center gap-2">
-                    {/* Qui potresti usare una funzione per tradurre gli ID in nomi leggibili */}
-                    <span className="bg-red-600 text-white px-2 py-1 rounded text-sm font-bold">{solution.suspectId}</span>
-                    <span className="bg-blue-600 text-white px-2 py-1 rounded text-sm font-bold">{solution.weaponId}</span>
-                    <span className="bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">{solution.roomId}</span>
+            <div className="bg-slate-100/90 p-6 rounded-xl mb-6 shadow-inner">
+                <h3 className="text-sm uppercase font-bold text-slate-500 mb-4 tracking-widest">
+                    La Soluzione Reale Era:
+                </h3>
+                
+                <div className="flex justify-center gap-4 items-end">
+                    {[solution.suspectId, solution.weaponId, solution.roomId].map((id) => {
+                        const card = getCardById(id);
+                        if (!card) return null;
+                        
+                        return (
+                            <GameCard 
+                                key={id}
+                                card={card}
+                                image={getCardImage(card)}
+                                size="SMALL" // Small sta bene per farne stare 3
+                            />
+                        );
+                    })}
                 </div>
             </div>
         )}

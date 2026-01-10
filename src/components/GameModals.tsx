@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import type { CluedoGameState } from '@cluedo-digital/shared';
 import type { Ctx } from 'boardgame.io';
 
+
+import { useAppDispatch } from '../store/hooks';
+import { addNotification } from '../store/slices/uiSlice';
+import { ROOMS } from '@cluedo-digital/shared'; // Per il nome della stanza
+
 import { AccusationModal } from './AccusationModal';
 import { GameOverModal } from './GameOverModal';      
 import { EliminationModal } from './EliminationModal';
@@ -22,6 +27,7 @@ interface GameModalsProps {
 // Poiché GameModals è posizionato all'inizio del div di GamePage ed ha css fixed o absolute, apparirà sopra a tutto il resto.
 
 export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID, events }) => {
+  const dispatch = useAppDispatch();
 
   // STATI LOCALI PER LA SCELTA DEL TURNO (BIVIO IPOTESI/MOVIMENTO)
   // Questi stati servono per ricordare la scelta fatta dall'utente nel TurnChoiceModal.
@@ -32,6 +38,7 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
   const [wantsToInvestigate, setWantsToInvestigate] = useState(false);
 
   const [showRefutationResult, setShowRefutationResult] = useState(false);
+  const [notifiedPlayers, setNotifiedPlayers] = useState<Set<string>>(new Set());
 
   // RESET QUANDO CAMBIA IL TURNO 
   // Ogni volta che cambia il giocatore corrente, resettiamo la memoria delle scelte
@@ -39,6 +46,39 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
     setDecisionMade(false);
     setWantsToInvestigate(false);
   }, [ctx.currentPlayer]);
+
+  useEffect(() => {
+    // Controlla ogni giocatore quando G.players cambia
+    Object.values(G.players).forEach((player) => {
+      // Se è stato mosso E non l'hai già notificato
+      if (player.wasMovedBySuggestion && !notifiedPlayers.has(player.id)) {
+        const room = ROOMS.find(r => r.id === player.currentRoom);
+        
+        dispatch(
+          addNotification({
+            message: `${player.name} è stato spostato in ${room?.name || 'sconosciuto'}!`,
+            type: 'warning',
+            duration: 4000,
+          })
+        );
+
+        // Marca come notificato
+        setNotifiedPlayers(prev => new Set(prev).add(player.id));
+      }
+    });
+
+    // IMPORTANTE: Se un giocatore NON è più trascinato, lo rimuoviamo da notifiedPlayers
+    // Così se lo trascinano di nuovo in un turno futuro, sarà notificato di nuovo
+    setNotifiedPlayers(prev => {
+      const updated = new Set(prev);
+      Object.values(G.players).forEach(player => {
+        if (!player.wasMovedBySuggestion) {
+          updated.delete(player.id);
+        }
+      });
+      return updated;
+    });
+  }, [G.players, dispatch, notifiedPlayers]);
 
   useEffect(() => {
     if (G.lastRefutation) {

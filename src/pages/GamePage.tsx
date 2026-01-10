@@ -10,7 +10,7 @@ import { GameModals } from "../components/GameModals";
 // Nuovi componenti 
 import GameCard from "../game/GameCard";
 import DiceRoller from "../game/DiceRoller";
-import { getCardImage } from "../utils/assets"; // Assicurati di avere questo utils
+import { getCardImage } from "../utils/assets"; 
 import { Dices } from "lucide-react";
 
 type GamePageProps = BoardProps<CluedoGameState>;

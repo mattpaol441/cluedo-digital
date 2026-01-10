@@ -524,9 +524,9 @@ export const CluedoGame: Game<CluedoGameState> = {
                 const realRoom = envelope.find(c => c.type === 'ROOM')?.id || 'Error';
 
                 const realSolution = { 
-                    suspectId: realSuspect, 
-                    weaponId: realWeapon, 
-                    roomId: realRoom 
+                    suspectId: realSuspect, // string | Error
+                    weaponId: realWeapon, // string | Error
+                    roomId: realRoom  // string | Error
                 };
 
                 // 3. Logica di Vittoria o Sconfitta
@@ -538,7 +538,7 @@ export const CluedoGame: Game<CluedoGameState> = {
                   // Passiamo anche la soluzione per poterla mostrare a tutti nella schermata di Game Over.
                   events.endGame({
                     winner: playerID,
-                    solution: realSolution // Passiamo la soluzione vera (che coincide con l'accusa, ma per sicurezza usiamo quella della busta)
+                    solution: realSolution // Passiamo la soluzione vera (che coincide con l'accusa, ma per sicurezza usiamo quella della busta) a GameOverModal
                   });
 
                 } else {

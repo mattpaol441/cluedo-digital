@@ -4,6 +4,7 @@ import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
 import { CluedoGame } from './game/Game';
 import GamePage from './pages/GamePage';
+import { NotificationManager } from './components/NotificationManager';
 
 // Configurazione del Client di Gioco
 const CluedoClient = Client({
@@ -25,6 +26,10 @@ function App() {
 
   return (
     <div className="h-full w-full">
+
+      {/* Notification Manager: legge Redux, mostra toast */}
+      <NotificationManager />
+
       {/* Avviamo il client come Giocatore "0" */}
       <CluedoClient playerID={playerID} />
     </div>

@@ -11,7 +11,7 @@ interface TurnChoiceModalProps {
 export const TurnChoiceModal: React.FC<TurnChoiceModalProps> = ({currentRoomId, onChooseMove, onChooseHypothesis }) => {
   const roomName = ROOMS.find(r => r.id === currentRoomId)?.name || currentRoomId;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
       <div className="bg-slate-800 border-2 border-yellow-500/50 rounded-xl shadow-2xl w-full max-w-md overflow-hidden p-6 text-center">
         
         <h2 className="text-2xl font-bold text-white mb-2">

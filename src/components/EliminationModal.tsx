@@ -19,7 +19,7 @@ export const EliminationModal: React.FC = () => {
 
   // --- MODALITÀ 2: MODALE DRAMMATICO (Iniziale) ---
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4">
         
         {/* Card Centrale */}
         <div className="bg-slate-900 border-4 border-red-700 rounded-2xl shadow-[0_0_60px_-15px_rgba(220,38,38,0.6)] w-full max-w-lg p-8 text-center relative overflow-hidden">

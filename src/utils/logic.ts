@@ -17,8 +17,9 @@ export function findNextRefuter(
         const nextPlayerID = ((startPlayerIndex + i) % numPlayers).toString();
         const nextPlayer = G.players[nextPlayerID];
 
-        // Se è eliminato, lo saltiamo
-        if (nextPlayer.isEliminated) continue;
+        // NOTA IMPORTANTE: I giocatori eliminati possono ancora smentirey
+        // Le loro carte rimangono rilevanti nel gioco.
+        
         
         // Poiché hand contiene oggetti Card, dobbiamo controllare card.id
         // Usiamo .map alla fine per restituire solo un array di stringhe (ID)

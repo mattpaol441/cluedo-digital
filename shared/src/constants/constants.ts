@@ -35,6 +35,33 @@ export const ROOMS: RoomCard[] = [
 // Unito tutto per facilità di accesso
 export const ALL_CARDS: Card[] = [...SUSPECTS, ...WEAPONS, ...ROOMS];
 
+// UTILITY FUNCTIONS PER VISUALIZZARE I NOMI
+// è indispensabile perché in models.ts usiamo solo gli ID per riferirci alle carte, quindi per mostrare il nome dobbiamo fare lookup qui
+// tradotto: quando usiamo suspect, weapon, room (ad esempio in RefutationModal.tsx con currentSuggestion), che usano suspectID, weaponID, roomID definiti in models.ts, dobbiamo chiamare queste funzioni per ottenere il nome leggibile 
+// es.: getSuspectName(suspectID) -> "Miss Scarlet"
+// é corretto avere sia models.ts che constants.ts perché models.ts definisce i tipi e le strutture dati, mentre constants.ts fornisce/popola i dati concreti e le liste usate nell'applicazione
+// anche ad esempio per cardId di matchingCards in SuggestionState in game.ts, usati in RefutationModal.tsx, dobbiamo usare getCardName(cardId) per mostrare il nome leggibile della carta, altrimenti nei vari passaggi l'info sul nome andrebbe persa
+export const getSuspectName = (id: string): string => {
+  return SUSPECTS.find(s => s.id === id)?.name ?? 'Unknown';
+};
+
+export const getWeaponName = (id: string): string => {
+  return WEAPONS.find(w => w.id === id)?.name ?? 'Unknown';
+};
+
+export const getRoomName = (id: string): string => {
+  return ROOMS.find(r => r.id === id)?.name ?? 'Unknown';
+};
+
+export const getCardName = (id: string): string => {
+  const card = ALL_CARDS.find(c => c.id === id);
+  return card?.name ?? 'Unknown';
+};
+ // Utility per ottenere l'intera carta da un ID, indispensabile per mostrare la carta perché in molti casi abbiamo solo l'ID (es. HypothesisModal), mentre GameCard (modale della carta) richiede l'intero oggetto carta
+export const getCardById = (id: string): Card | undefined => {
+  return ALL_CARDS.find(c => c.id === id);
+};
+
 // --- 2. CONFIGURAZIONE GIOCATORI ---
 
 // Mappa per associare gli ID dei personaggi ai colori HEX
