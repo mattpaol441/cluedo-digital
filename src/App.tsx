@@ -1,12 +1,21 @@
-// mette insieme le Regole con la Grafica e li connette al Server
-// mette insieme le Regole con la Grafica e li connette al Server
+// questo è il componente principale dell'applicazione React, il direttore d'orchestra da cui parte tutto
+// qui si collega il gioco di Boardgame.io (le regole) con la UI (la grafica) di React e il server multiplayer 
+// inoltre qui si mette il Notification Manager che legge da Redux e mostra le notifiche a schermo
+// quando React renderizza App, costruisce l’intera interfaccia utente (tutte le pagine, le componenti ecc....).
+
+// NOTA: In un'applicazione ben fatta, App viene renderizzata:
+// una volta all'avvio (Mount): quando si apre il sito si costruisce lo scheletro
+// raramente durante l'uso: solo se cambiano cose "globali" che riguardano tutto il sito
+// cercando di far scattare l'aggiornamento il più in basso possibile e di evitare di mettere stati locali in App che cambiano spesso, perché farebbero
+// rifare tutta l'interfaccia utente (re-render) inutilmente causando cali di prestazioni.
+
 import { Client } from 'boardgame.io/react';
 import { SocketIO } from 'boardgame.io/multiplayer';
 import { CluedoGame } from './game/Game';
 import GamePage from './pages/GamePage';
 import { NotificationManager } from './components/NotificationManager';
 
-// Configurazione del Client di Gioco
+// Configurazione del Client di Gioco (di Boardgame.io) chiamato da App
 const CluedoClient = Client({
   game: CluedoGame,      // 1. Le Regole (Backend Logic)
   board: GamePage,    // 2. La Grafica (Frontend UI)

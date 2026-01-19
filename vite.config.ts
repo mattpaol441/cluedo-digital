@@ -1,3 +1,4 @@
+// qui diciamo a Vite come deve comportarsi, dove trovare i file, come gestire le dipendenze ecc....
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'

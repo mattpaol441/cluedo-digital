@@ -18,7 +18,7 @@ interface RefutationModalProps {
 
 export const RefutationModal: React.FC<RefutationModalProps> = ({ G, playerID, moves, events, showResult, onCloseResult }) => {
   
-  // 1. GESTIONE RISULTATO (Qualcuno ha mostrato una carta)
+  // 1. GESTIONE RISULTATO (qualcuno ha mostrato una carta)
   if (G.lastRefutation && showResult) {
     const { suggesterId, refuterId, cardShown } = G.lastRefutation;
     const isSuggester = playerID === suggesterId;

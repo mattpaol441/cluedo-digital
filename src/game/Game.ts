@@ -1,3 +1,6 @@
+// File di logica pura di gioco: non usa componenti React, non gestisce UI e non contiene codice di presentazione.
+// Serve solo a definire le regole, lo stato e le azioni del gioco Cluedo per Boardgame.io.
+// Qui tutto è pensato per essere agnostico rispetto al frontend: riceve input, aggiorna lo stato, restituisce dati, senza mai “mostrare” nulla.
 import type { Game } from 'boardgame.io';
 
 import { 
@@ -104,7 +107,7 @@ const dealCards = (random: any, numPlayers: number): {secretEnvelope: Card[], pl
 export const CluedoGame: Game<CluedoGameState> = {
   name: 'cluedo-digital',
 
-// Configurazione Iniziale della partita
+// Configurazione Iniziale della partita con creazione dello stato globale della partita G (tiene traccia di tutto: carte, giocatori, posizioni, stato dei giocatori, fasi di gioco ecc....)
   setup: ({ ctx, random }): CluedoGameState => {
     const numPlayers = ctx.numPlayers;
 
@@ -114,7 +117,7 @@ export const CluedoGame: Game<CluedoGameState> = {
     // Creazione giocatori
     const players: Record<string, Player> = {};
     
-    // Assegniamo i personaggi in ordine basato su SUSPECTS: Player 0 = Miss Scarlet, Player 1 = Peacock ecc.
+    // Assegniamo i personaggi in ordine basato su SUSPECTS: Player 0 = Miss Scarlet, Player 1 = Peacock ecc....
     for (let i = 0; i < numPlayers; i++) {
       const suspectDef = SUSPECTS[i];
       const pID = i.toString();
@@ -152,7 +155,7 @@ export const CluedoGame: Game<CluedoGameState> = {
       // // -----------------------------------
     }
 
-    // C. Ritorna lo Stato Iniziale Completo (G)
+    // C. Ritorna lo stato iniziale completo (G)
     return {
       secretEnvelope: dealt.secretEnvelope,
       tableCards: dealt.tableCards,
@@ -182,9 +185,9 @@ export const CluedoGame: Game<CluedoGameState> = {
   turn: {
     // Definiamo chi può giocare all'inizio del turno
     // 'currentPlayer' è il comportamento standard (tocca a chi ha i dadi)
-    activePlayers: { currentPlayer: 'action' },
+    activePlayers: { currentPlayer: 'action' }, // Di default solo il currentPlayer può agire ('action' stage), ma durante la smentita viene attivato solo il giocatore che deve rispondere ('refutationStage') 
 
-    // INIZIO TURNO (setup e controlli)
+    // INIZIO TURNO (setup e controlli come resettare flag e dati temporanei all’inizio del turno, saltare il turno se il giocatore è eliminato ecc....)
     onBegin: ({ G, ctx, events }) => {
       // 1. Pulizia Dati Generali
       G.lastRefutation = null;
@@ -194,7 +197,7 @@ export const CluedoGame: Game<CluedoGameState> = {
       const currentPlayer = G.players[ctx.currentPlayer];
 
       if (currentPlayer) {
-        // 2. Reset Logica Movimento
+        // 2. Reset logica movimento
         currentPlayer.hasMoved = false;
         currentPlayer.validMoves = [];
         
@@ -211,7 +214,7 @@ export const CluedoGame: Game<CluedoGameState> = {
       }
     },
 
-    // FINE TURNO (Pulizia finale)
+    // FINE TURNO (Pulizia finale a fine turno, come resettare flag temporanei)
     onEnd: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
       
@@ -221,28 +224,28 @@ export const CluedoGame: Game<CluedoGameState> = {
       }
     },
 
-    // CONFIGURAZIONE FASI (Stages)
+    // CONFIGURAZIONE FASI (Stages) con dentro le MOSSE (moves), ovvero le azioni che i giocatori possono compiere nel loro turno, raggruppate in fasi 
     stages: {
       
-      // FASE 1: AZIONE NORMALE (Default)
-      // Qui il giocatore tira i dadi, si muove, accusa.
+      // FASE 1: ACTION, AZIONE NORMALE (Default)
+      // Qui il giocatore tira i dadi, si muove, formula un'ipotesi, accusa.
       action: {
-        moves: { 
-            // NOTA IMPORTANTE: per le azioni che vengono proibite a giocatori eliminati, il controllo va fatto qui dentro, non nel frontend. Il frontend è solo un'interfaccia utente, il vero "cervello" del gioco è qui.
+        moves: {  
+            // NOTA IMPORTANTE: per le azioni che vengono proibite a giocatori eliminati, il controllo va fatto qui dentro, non nel frontend. Il frontend è solo interfaccia utente, il vero "cervello" del gioco è qui.
             // In particolare, viene proibita ogni mossa, ad eccezione di revealCard (per mostrare le carte agli altri giocatori e quindi smentire le iptesi altrui)
             rollDice: ({ G, ctx , random }) => {
               const die1 = random.Die(6);
               const die2 = random.Die(6);
-              G.diceRoll = [die1, die2];
+              G.diceRoll = [die1, die2]; // Salviamo i dadi nello stato globale del gioco 
               
-              const player = G.players[ctx.currentPlayer];
+              const player = G.players[ctx.currentPlayer]; // Recuperiamo il giocatore corrente
               // Appena decido di tirare i dadi, significa che sto iniziando un nuovo movimento.
-              // Quindi cancello qualsiasi "memoria" del fatto che ero entrato in stanza nel turno precedente.
-              if (player) {
+              // Quindi cancello qualsiasi "memoria" del fatto che ero entrato in stanza nel turno precedente (resetta lo stato di ingresso manuale).
+              if (player) { // Se il player esiste (sicurezza)
                   player.enteredManually = false; 
                   player.hasMoved = false; 
               }
-              // Usiamo la funzione del collega per calcolare le mosse
+              // Calcoliamo le mosse valide che il giocatore può fare in base alla posizione attuale, al totale dei dadi, agli altri giocatori e al suo ID.
               player.validMoves = getValidMoves(player.position.x, player.position.y, die1 + die2, G.players, player.id);
               console.log(`Dadi lanciati: ${die1} e ${die2} (Totale: ${die1 + die2}). Mosse calcolate:`, player.validMoves);
             },
@@ -251,9 +254,9 @@ export const CluedoGame: Game<CluedoGameState> = {
             movePawn: ({ G , ctx, events }, x: number, y: number) => {
 
               const playerID = ctx.currentPlayer;
-              const player = G.players[playerID];
-              const coordKey = `${x},${y}`;
-              // Se il Player è eliminato, blocchiamo il movimento 
+              const player = G.players[playerID]; // Recupero del giocatore corrente
+              const coordKey = `${x},${y}`; // Creo una stringa chiave con le coordinate di destinazione
+              // Se il Player è eliminato, ha già mosso o non ha ancora tirato i dadi, blocchiamo il movimento 
               if (player.isEliminated) return 'INVALID_MOVE';
               if (player.hasMoved) {console.log("Errore: Il giocatore ha già effettuato un movimento in questo turno."); return 'INVALID_MOVE'; }
               if (G.diceRoll[0] === 0 && G.diceRoll[1] === 0) {console.log("Errore: I dadi non sono stati lanciati."); return 'INVALID_MOVE'; }
@@ -273,19 +276,19 @@ export const CluedoGame: Game<CluedoGameState> = {
                   console.warn("Mossa ignorata: Clic sulla stessa casella.");
                   return 'INVALID_MOVE'; 
               }
-
+              // Se la destinazione non è tra le mosse valide calcolate, blocchiamo il movimento 
               if (!player.validMoves.includes(coordKey)) {
                 console.log(`Errore: Mossa non valida verso (${x}, ${y}). Mosse valide sono:`, player.validMoves);
                 return 'INVALID_MOVE';
               }
 
               // NUOVO FIX: BLOCCO STESSA STANZA
-              // Verifichiamo se la casella di destinazione è una porta che porta 
+              // Verifichiamo se la casella di destinazione è una porta che conduce 
               // alla STESSA stanza in cui il giocatore si trova già.
               const targetRoom = DOOR_MAPPING[coordKey];
               const currentRoom = player.currentRoom;
 
-              if (targetRoom && currentRoom && targetRoom === currentRoom) {
+              if (targetRoom && currentRoom && targetRoom === currentRoom) {// Se la casella di destinazione é una porta e il giocatore é in una stanza e si trova nella stanza uguale alla destinazione in cui vuole entrare
                   console.warn("Mossa illegale: Tentativo di rientrare nella stessa stanza.");
                   return 'INVALID_MOVE';
               }
@@ -321,7 +324,7 @@ export const CluedoGame: Game<CluedoGameState> = {
               //   if (isOccupied) return 'INVALID_MOVE'; 
               // }
 
-              // Aggiorna la posizione del giocatore
+              // Aggiorna la posizione del giocatore, segna che ha mosso e resetta le mosse valide
               player.position = { x, y };
               player.hasMoved = true; 
               player.validMoves = [];
@@ -329,30 +332,30 @@ export const CluedoGame: Game<CluedoGameState> = {
               // Resettiamo sempre il flag "trascinato" quando ci si muove volontariamente
               player.wasMovedBySuggestion = false; 
 
-              const cellType = BOARD_LAYOUT[y][x];
+              const cellType = BOARD_LAYOUT[y][x]; // Determiniamo il tipo di cella in cui il giocatore si è mosso
 
               // 4. GESTIONE SPECIFICA DEL CENTRO (ACCUSA FINALE)
-              if (cellType === CELL_TYPES.CENTER) {
+              if (cellType === CELL_TYPES.CENTER) { // Se entra nella stanza centrale
                 console.log("Il giocatore è entrato nella Busta Gialla (Centro)!");
                 
-                // Assegniamo una 'stanza fittizia' per attivare la UI dell'Accusa
+                // Assegniamo una 'stanza fittizia' (aggiorna lo stato) per attivare la UI dell'accusa
                 player.currentRoom = 'CENTER_ROOM'; 
                 
                 // Il giocatore deve ora avere il tempo di selezionare le carte e fare l'accusa.
-                return; 
+                return; // termina la funzione qui
               }
 
               // const coordKey = `${x},${y}`;
-              if (DOOR_MAPPING[coordKey]) {
-                player.currentRoom = DOOR_MAPPING[coordKey];
+              if (DOOR_MAPPING[coordKey]) { // Se la casella di destinazione è una porta
+                player.currentRoom = DOOR_MAPPING[coordKey]; // Aggiorna la stanza corrente del giocatore
                 // Flag IMPORTANTE: Sono entrato con le mie gambe, quindi DEVO fare un'ipotesi
                 player.enteredManually = true; 
                 console.log(`Player ${player.name} è entrato nella stanza: ${player.currentRoom}`); // Qui non deve chiudere il turno, perché dopo essersi mosso in una stanza il giocatore deve poter formulare un'ipotesi 
               }
 
-              else {
+              else { // Se la casella di destinazione non è una porta
                 player.currentRoom = undefined; // In corridoio
-                player.enteredManually = false; // Corridoio -> niente ipotesi
+                player.enteredManually = false; // Corridoio, quindi niente ipotesi
                 console.log('Movimento in corridoio completato.');
                 
                 // In corridoio non c'è altro da fare, passo il turno
@@ -367,7 +370,7 @@ export const CluedoGame: Game<CluedoGameState> = {
 
               makeHypothesis: ({ G, ctx, events }, suspectId: string, weaponId: string) => {
                 const playerID = ctx.currentPlayer;
-                const player = G.players[playerID];
+                const player = G.players[playerID]; // Recupero del giocatore corrente
 
                 // I giocatori eliminati non possono fare ipotesi 
                 if (player.isEliminated) {
@@ -376,7 +379,7 @@ export const CluedoGame: Game<CluedoGameState> = {
 
                 const currentRoom = player.currentRoom;
 
-                // Deve essere fisicamente in una stanza vera 
+                // Deve essere fisicamente in una stanza vera (non corridoio o centro)
                 if (!currentRoom || currentRoom === 'CENTER_ROOM') {
                     return 'INVALID_MOVE'; 
                 }
@@ -397,16 +400,17 @@ export const CluedoGame: Game<CluedoGameState> = {
                 
                 console.log(`IPOTESI REGISTRATA: ${player.name} accusa ${suspectId} in ${currentRoom}`);
 
-                // 5. TELETRASPORTO DEL SOSPETTATO 
-                const accusedPlayerKey = Object.keys(G.players).find(
-                    key => G.players[key].character === suspectId || G.players[key].name === suspectId
-                );
+                // TELETRASPORTO DEL SOSPETTATO: come prima cosa cerca tra tutti i giocatori chi ha il personaggio sospettato nell'ipotesi (per character o per nome)   
+                const accusedPlayerKey = Object.keys(G.players).find( // Si ottiene un array di tutte le chiavi (ID) dei giocatori presenti in G.players, e .find scorre queste chiavi per trovare quella che soddisfa la condizione specificata nella funzione
+                    key => G.players[key].character === suspectId || G.players[key].name === suspectId // Per ogni giocatore (key), controlla se il suo personaggio (character) o il suo nome corrisponde all'ID del sospettato nell'ipotesi
+                );  
 
-                if (accusedPlayerKey) {
+                if (accusedPlayerKey) { // Se abbiamo trovato un giocatore che corrisponde al sospettato
                     const accusedPlayer = G.players[accusedPlayerKey];
-                    if (accusedPlayer.id !== playerID) {
+                    if (accusedPlayer.id !== playerID) { // E non è lo stesso che sta facendo l'ipotesi
                       // VERIFICA: Il sospettato è già qui?
-                      const isAlreadyHere = accusedPlayer.currentRoom === currentRoom;
+                      const isAlreadyHere = accusedPlayer.currentRoom === currentRoom; // Confronta la stanza in cui si trova attualmente il giocatore sospettato (accusedPlayer.currentRoom) con la stanza in cui si trova il giocatore che sta facendo l’ipotesi (currentRoom).
+                      // Il risultato (booleano) viene salvato in isAlreadyHere
                       
                       // Spostiamo il sospettato
                       accusedPlayer.currentRoom = currentRoom;
@@ -426,16 +430,16 @@ export const CluedoGame: Game<CluedoGameState> = {
                 }  
 
                 
-                // 7. FINE FASE ATTIVA
+                // FINE FASE ATTIVA
                 // Il turno non finisce, ma entra nella fase "Smentita".
 
                 // CERCA SMENTITORE (Auto-Skip) 
-                // Invece di assegnare semplicemente il prossimo giocatore, usiamo la funzione definita in utils/logic.ts
+                // Invece di assegnare semplicemente il prossimo giocatore, usiamo la funzione findNextRefuter definita in utils/logic.ts
                 
-                // Resettiamo eventuali risultati vecchi per pulire l'interfaccia
+                // Resettiamo eventuali risultati vecchi di smentite precedenti per pulire l'interfaccia
                 G.lastRefutation = null; 
 
-                const result = findNextRefuter(
+                const result = findNextRefuter( // Restituisce i dati del giocatore che può smentire, o null se nessuno può farlo
                     G, 
                     ctx, 
                     Number(playerID), 
@@ -443,9 +447,9 @@ export const CluedoGame: Game<CluedoGameState> = {
                 );
 
                 if (result) {
-                    // CASO A: ABBIAMO TROVATO QUALCUNO CHE PUÒ SMENTIRE
+                    // SE ABBIAMO TROVATO QUALCUNO CHE PUÒ SMENTIRE
                     console.log(`[SERVER] Smentita richiesta a PlayerID: ${result.playerID}`);
-
+                    // Salviamo lo stato della suggestione in corso per la fase di smentita (refutationStage)
                     G.currentSuggestion = {
                         suggesterId: playerID,      
                         suspect: suspectId as any,
@@ -464,7 +468,7 @@ export const CluedoGame: Game<CluedoGameState> = {
                     });
 
                 } else {
-                    // CASO B: NESSUNO HA LE CARTE (Auto-Skip totale)
+                    // SE INVECE NESSUNO HA LE CARTE (Auto-Skip totale)
                     console.log("[SERVER] Nessuno può smentire l'ipotesi.");
 
                     // Salviamo il risultato vuoto così il frontend può dire "Nessuna smentita!"
@@ -506,7 +510,7 @@ export const CluedoGame: Game<CluedoGameState> = {
 
                 console.log(`[SERVER] Accusa ricevuta da ${player.name}:`, { suspectId, weaponId, roomId });
 
-                // 1. Recuperiamo la Soluzione dalla Busta Gialla
+                // Recuperiamo la Soluzione dalla Busta Gialla
                 // G.secretEnvelope è un array di 3 oggetti Card (inizializzato sopra, nel setup)
                 const envelope = G.secretEnvelope;
 

@@ -1,9 +1,9 @@
 import type { CluedoGameState } from '@cluedo-digital/shared'; 
 
-/**
- * Cerca il prossimo giocatore in senso orario che possiede almeno una delle carte ipotizzate.
- * Ritorna l'ID del giocatore e la lista degli ID delle carte che matchano.
- */
+
+// Cerca il prossimo giocatore in senso orario che possiede almeno una delle carte ipotizzate.
+// Ritorna l'ID del giocatore e la lista degli ID delle carte che matchano.
+
 export function findNextRefuter(
     G: CluedoGameState, 
     ctx: any, 

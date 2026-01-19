@@ -26,35 +26,33 @@ interface GameModalsProps {
 // Se GameModals decide di ritornare <AccusationModal />, React prende quel pezzo di UI e lo "incolla" dentro GamePage esattamente dove abbiamo posizionato il tag <GameModals />.
 // Poiché GameModals è posizionato all'inizio del div di GamePage ed ha css fixed o absolute, apparirà sopra a tutto il resto.
 
-export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID, events }) => {
-  const dispatch = useAppDispatch();
+export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID, events }) => { // Definizione del componente GameModals
+  const dispatch = useAppDispatch(); // Inizializziamo il dispatch di Redux per inviare azioni
 
   // STATI LOCALI PER LA SCELTA DEL TURNO (BIVIO IPOTESI/MOVIMENTO)
-  // Questi stati servono per ricordare la scelta fatta dall'utente nel TurnChoiceModal.
+  // Questi stati servono per ricordare la scelta fatta dall'utente nel TurnChoiceModal per gestire la logica dei modali dinamici e delle notifiche, senza sporcare lo stato globale del gioco.
   // Una volta che l'utente fa la scelta, il modale scompare e compare l'altro modale (HypothesisModal o il lancio dei dadi per il movimento).
   // 'decisionMade': diventa true appena l'utente clicca su un bottone del bivio
-  const [decisionMade, setDecisionMade] = useState(false);
-  // 'wantsToInvestigate': diventa true se l'utente sceglie la lente d'ingrandimento
-  const [wantsToInvestigate, setWantsToInvestigate] = useState(false);
+  const [decisionMade, setDecisionMade] = useState(false); // infatti decisionMade indica se l’utente ha già scelto tra muoversi o indagare nel modale di bivio (TurnChoiceModal).
+  const [wantsToInvestigate, setWantsToInvestigate] = useState(false); // wantsToInvestigate invece indica se l’utente ha scelto di fare un’ipotesi (indagare) nel modale di bivio.
 
-  const [showRefutationResult, setShowRefutationResult] = useState(false);
-  const [notifiedPlayers, setNotifiedPlayers] = useState<Set<string>>(new Set());
+  const [showRefutationResult, setShowRefutationResult] = useState(false); // Stato per mostrare il risultato della smentita dopo che è avvenuta
+  const [notifiedPlayers, setNotifiedPlayers] = useState<Set<string>>(new Set()); // Stato per tenere traccia dei giocatori già notificati per lo spostamento da suggerimento per evitare notifiche duplicate
 
   // RESET QUANDO CAMBIA IL TURNO 
-  // Ogni volta che cambia il giocatore corrente, resettiamo la memoria delle scelte
+  // Resettiamo la memoria delle scelte
   useEffect(() => {
     setDecisionMade(false);
     setWantsToInvestigate(false);
-  }, [ctx.currentPlayer]);
+  }, [ctx.currentPlayer]); // Ogni volta che cambia il giocatore corrente
 
   useEffect(() => {
-    // Controlla ogni giocatore quando G.players cambia
+    // Controlla scorrendo/ciclando su ogni giocatore.... 
     Object.values(G.players).forEach((player) => {
-      // Se è stato mosso E non l'hai già notificato
-      if (player.wasMovedBySuggestion && !notifiedPlayers.has(player.id)) {
-        const room = ROOMS.find(r => r.id === player.currentRoom);
+      if (player.wasMovedBySuggestion && !notifiedPlayers.has(player.id)) { // Se un giocatore é stato spostato da un suggerimento e non é già stato notificato....
+        const room = ROOMS.find(r => r.id === player.currentRoom); // Trova il nome della stanza in cui é stato spostato
         
-        dispatch(
+        dispatch( // Manda a tutti una notifica che segnala che il giocatore é stato spostato
           addNotification({
             message: `${player.name} è stato spostato in ${room?.name || 'sconosciuto'}!`,
             type: 'warning',
@@ -62,29 +60,29 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
           })
         );
 
-        // Marca come notificato
+        // Marca come notificato, aggiungendo l'id del giocatore all'insieme dei notificati, per evitare notifiche duplicate
         setNotifiedPlayers(prev => new Set(prev).add(player.id));
       }
     });
 
     // IMPORTANTE: Se un giocatore NON è più trascinato, lo rimuoviamo da notifiedPlayers
     // Così se lo trascinano di nuovo in un turno futuro, sarà notificato di nuovo
-    setNotifiedPlayers(prev => {
-      const updated = new Set(prev);
-      Object.values(G.players).forEach(player => {
-        if (!player.wasMovedBySuggestion) {
-          updated.delete(player.id);
+    setNotifiedPlayers(prev => { // Modifico l'insieme dei notificati usando prev, funzione che riceve il valore precedente di notifiedPlayers  
+      const updated = new Set(prev); // Creo una copia dell'insieme precedente, così da non modificarlo direttamente (immutabilità)
+      Object.values(G.players).forEach(player => { // Ciclando su ogni giocatore....
+        if (!player.wasMovedBySuggestion) { // Se il giocatore non é stato spostato da un'ipotesi (non é trascinato)
+          updated.delete(player.id); // Non é più tra i notificati, così da poter essere notificato di nuovo in futuro
         }
       });
-      return updated;
+      return updated; // Restituisce il nuovo valore di stato per notifiedPlayers
     });
-  }, [G.players, dispatch, notifiedPlayers]);
+  }, [G.players, dispatch, notifiedPlayers]); // Ogni volta che cambia G.players, dispatch o notifiedPlayers
 
-  useEffect(() => {
-    if (G.lastRefutation) {
-      setShowRefutationResult(true);
+  useEffect(() => { // Mostra il risultato della smentita 
+    if (G.lastRefutation) { // Se qualcuno ha smentito un'ipotesi  
+      setShowRefutationResult(true); // Imposta showRefutationResult a true per mostrare il modale del risultato della smentita
     }
-  }, [G.lastRefutation]);
+  }, [G.lastRefutation]); // Ogni volta che cambia G.lastRefutation
 
   // NOTA SU QUESTI STATI:
   // Non li mettiamo in G (stato globale del gioco) perché non servono a tutti i giocatori, ma solo a chi sta giocando (playerID).
@@ -93,19 +91,19 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
   // Sappiamo che quando il giocatore cambia, React fa primo render con vecchi stati, poi esegue l'useEffect che resetta gli stati, e fa un secondo render con gli stati resettati, ma non è un problema perché l'utente non vede nulla in quei due render veloci.
   
 
-  const myPlayer = playerID ? G.players[playerID] : null;
+  const myPlayer = playerID ? G.players[playerID] : null; // Recupero l’oggetto player corrispondente al playerID attuale
 
-  // 1. PRIORITÀ ASSOLUTA: GAME OVER
-  if (ctx.gameover) {
+  // PRIORITÀ ASSOLUTA: GAME OVER
+  if (ctx.gameover) { // Se la partita é finita
     // Verifichiamo se c'è un vero vincitore (ID non null)
     const hasWinner = ctx.gameover.winner !== null;
 
-    // Calcoliamo il nome da mostrare
+    // Se c'é, calcoliamo il nome da mostrare
     const winnerName = hasWinner 
-        ? G.players[ctx.gameover.winner]?.name 
+        ? G.players[ctx.gameover.winner]?.name // Prendendo il suo nome dai players
         : "Il colpevole è fuggito!";
 
-    return (
+    return ( // E ritorno il componente GameOverModal, passando il nome del vincitore, la soluzione e se é vittoria o sconfitta 
         <GameOverModal 
             winnerName={winnerName} 
             solution={ctx.gameover.solution}
@@ -115,11 +113,11 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
   }
 
   // Se non ho un player (spettatore), non mostro altro
-  if (!myPlayer) return null;
+  if (!myPlayer) return null; 
 
   // SMENTITA - Priorità Alta
   // Controlliamo se c'è un suggerimento attivo o se dobbiamo mostrare un risultato
-  if (G.currentSuggestion || (G.lastRefutation && showRefutationResult)) {
+  if (G.currentSuggestion || (G.lastRefutation && showRefutationResult)) { // Se esiste una currentSuggestion (cioé é in corso una fase di smentita) oppure esiste una lastRefutation e lo stato locale showRefutationResult é true (cioé bisogna mostrare il risultato della smentita appena avvenuta)
       return (
           <RefutationModal 
              G={G}
@@ -142,7 +140,7 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
 
 
   // VARIABILI COMUNI PER I CONTROLLI
-  const isMyTurn = ctx.currentPlayer === playerID;
+  const isMyTurn = ctx.currentPlayer === playerID; // True se é il turno del giocatore corrente
   
   // LOGICA FORMULAZIONE IPOTESI 
   // Requisiti:
@@ -151,16 +149,16 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
   // C. Non ho ancora fatto un'ipotesi in questo turno (!G.currentSuggestion)
   // D. REGOLA CRITICA: Ho lanciato i dadi (numMoves > 0) OPPURE sono stato trascinato qui (wasMovedBySuggestion)
   
-  const isInRoom = myPlayer.currentRoom && myPlayer.currentRoom !== 'CENTER_ROOM';
-  const suggestionNotMadeYet = !G.currentSuggestion;
+  const isInRoom = myPlayer.currentRoom && myPlayer.currentRoom !== 'CENTER_ROOM'; // True se il giocatore é in una stanza (non centro)
+  const suggestionNotMadeYet = !G.currentSuggestion; // True se non esiste una currentSuggestion (non ho ancora fatto un'ipotesi in questo turno)
   
   /// FIX CRITICO:
   // Prima usavamo: const enteredManually = (ctx.numMoves || 0) > 0;
   // Questo era sbagliato perché ctx.numMoves scatta appena tiri i dadi.
-  // Ora usiamo la variabile specifica del giocatore che diventa true SOLO DOPO che la pedina è entrata.
+  // Ora usiamo la variabile specifica del giocatore che diventa true SOLO DOPO che il giocatore é entrato nella stanza camminando
   const hasEnteredRoom = myPlayer.enteredManually; 
   
-  // B. Ingresso Passivo: Sono stato trascinato (e non sono entrato a piedi)
+  // Ingresso Passivo, sono stato trascinato (e non sono entrato a piedi)
   const wasDraggedHere = myPlayer.wasMovedBySuggestion && !hasEnteredRoom;
 
   // SCENARIO 1: MODALE DI SCELTA (BIVIO)
@@ -168,13 +166,13 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
   // 1. È il mio turno e sono in una stanza
   // 2. Sono stato trascinato qui (wasDraggedHere)
   // 3. NON ho ancora preso una decisione (!decisionMade)
-  if (isMyTurn && isInRoom && suggestionNotMadeYet && wasDraggedHere && !decisionMade) {
+  if (isMyTurn && isInRoom && suggestionNotMadeYet && wasDraggedHere && !decisionMade) { // Se le condizioni passano, mostra il modale di bivio scelta 
       return (
           <TurnChoiceModal
               currentRoomId={myPlayer.currentRoom!} // Il ! è sicuro (isInRoom è true) 
               onChooseMove={() => {
                   setDecisionMade(true);      // Ho deciso...
-                  setWantsToInvestigate(false); // ...di muovermi. (Chiude modale, vedo mappa)
+                  setWantsToInvestigate(false); // ...di muovermi. (Il componente fa un nuovo render perché é cambiato lo stato locale, chiude modale, vedo mappa)
               }}
               onChooseHypothesis={() => {
                   setDecisionMade(true);      // Ho deciso...
@@ -192,10 +190,10 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
   //    - O sono stato trascinato MA ho scelto esplicitamente di indagare (wantsToInvestigate)
   
   const showHypothesis = 
-      isMyTurn && 
-      isInRoom && 
-      suggestionNotMadeYet && 
-      (hasEnteredRoom || (wasDraggedHere && wantsToInvestigate));
+      isMyTurn && // È il mio turno
+      isInRoom && // Sono in una stanza
+      suggestionNotMadeYet && // Non ho ancora fatto un'ipotesi in questo turno
+      (hasEnteredRoom || (wasDraggedHere && wantsToInvestigate)); // Sono entrato camminando oppure sono stato trascinato e ho scelto di indagare
 
   if (showHypothesis) {
      return (
@@ -206,7 +204,7 @@ export const GameModals: React.FC<GameModalsProps> = ({ G, ctx, moves, playerID,
      );
   }
 
-  // --- 6. MODALE ACCUSA (Busta Gialla) ---
+  // MODALE ACCUSA (Busta Gialla)
   const showAccusation = 
       isMyTurn && 
       myPlayer.currentRoom === 'CENTER_ROOM';

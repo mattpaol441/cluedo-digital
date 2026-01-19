@@ -6,7 +6,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
  // Contiene:
  // - Stato di autenticazione (loggedIn, loading)
  // - Dati utente (uid, email, displayName)
- // - Token di sessione (se necessario)
+ // - Info/Token di sessione (se necessario)
  // 
  // Note:
  // - I dati sono serializzabili (no funzioni, no Date objects non processate)

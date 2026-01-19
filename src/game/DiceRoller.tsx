@@ -11,9 +11,10 @@ interface DiceRollerProps {
 }
 
 const DiceRoller: React.FC<DiceRollerProps> = ({ G, ctx, moves, playerID }) => {
-    const isMyTurn = ctx.currentPlayer === playerID;
-    const hasRolled = G.diceRoll[0] !== 0 && G.diceRoll[1] !== 0;
+    const isMyTurn = ctx.currentPlayer === playerID; // True se é il turno del giocatore corrente
+    const hasRolled = G.diceRoll[0] !== 0 && G.diceRoll[1] !== 0; // True se i dadi sono già stati lanciati (entrambi diversi da zero)
 
+    // Se non è il tuo turno, oppure hai già tirato i dadi, il componente non renderizza nulla (return null)
     if (!isMyTurn) return null;
     if (hasRolled) return null;
 
@@ -25,7 +26,7 @@ const DiceRoller: React.FC<DiceRollerProps> = ({ G, ctx, moves, playerID }) => {
                 <p className="text-slate-500 mb-6">Devi tirare i dadi per muoverti.</p>
 
                 <button
-                onClick={() => moves.rollDice()}
+                onClick={() => moves.rollDice()} // Al click viene chiamata la mossa rollDice() (invio al backend)
                 className="
                     group relative
                     bg-red-600 hover:bg-red-700 text-white 
