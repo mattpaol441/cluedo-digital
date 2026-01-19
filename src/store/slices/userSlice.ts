@@ -21,9 +21,11 @@ export interface UserState {
   authError: string | null;
 
   // Dati Utente
-  uid: string | null;
-  email: string | null;
-  displayName: string | null;
+  uid: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+  isOnline: boolean;
 
   // Session
   lastLoginTime: number | null;
@@ -33,9 +35,11 @@ const initialState: UserState = {
   isLoggedIn: false,
   isLoading: false,
   authError: null,
-  uid: null,
-  email: null,
-  displayName: null,
+  uid: '',
+  email: '',
+  displayName: '',
+  isOnline: false,
+  avatarUrl: undefined,
   lastLoginTime: null,
 };
 
@@ -71,9 +75,9 @@ const userSlice = createSlice({
       state.isLoggedIn = false;
       state.isLoading = false;
       state.authError = null;
-      state.uid = null;
-      state.email = null;
-      state.displayName = null;
+      state.uid = '';
+      state.email = '';
+      state.displayName = '';
       state.lastLoginTime = null;
     },
 
@@ -83,9 +87,14 @@ const userSlice = createSlice({
       state.isLoading = false;
     },
 
-    // UPDATE PROFILO 
-    updateUserDisplayName: (state, action: PayloadAction<string>) => {
-      state.displayName = action.payload;
+    // Aggiorna il profilo
+    updateProfile: ( state, action: PayloadAction<Partial<UserState>>) => {
+      return { ...state, ...action.payload };
+    },
+
+    // Aggiorna l'immagine profilo
+    updateAvatar: (state, action: PayloadAction<string>) => {
+      state.avatarUrl = action.payload;
     },
   },
 });
@@ -95,7 +104,8 @@ export const {
   setUserLoggedIn,
   setUserLoggedOut,
   setAuthError,
-  updateUserDisplayName,
+  updateProfile,
+  updateAvatar,
 } = userSlice.actions;
 
 export default userSlice.reducer;
