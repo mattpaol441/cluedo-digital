@@ -14,6 +14,10 @@ import { SocketIO } from 'boardgame.io/multiplayer';
 import { CluedoGame } from './game/Game';
 import GamePage from './pages/GamePage';
 import { NotificationManager } from './components/NotificationManager';
+import HomePage from './pages/HomePage';
+import NewGame from './pages/NewGame';
+import ProfileEditPage from './pages/ProfileEditPage';
+import JoinGamePage from './pages/JoinGamePage';
 
 // Configurazione del Client di Gioco (di Boardgame.io) chiamato da App
 const CluedoClient = Client({
@@ -37,10 +41,14 @@ function App() {
     <div className="h-full w-full">
 
       {/* Notification Manager: legge Redux, mostra toast */}
-      <NotificationManager />
+      {/* <NotificationManager /> */}
 
       {/* Avviamo il client come Giocatore "0" */}
-      <CluedoClient playerID={playerID} />
+      {/* <CluedoClient playerID={playerID} /> */}
+      {/* <HomePage /> */}
+      {/*<NewGame />*/}
+      {/*<ProfileEditPage />*/}
+      <JoinGamePage />
     </div>
   );
 }
