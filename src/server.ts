@@ -22,11 +22,43 @@ const server = Server({
   games: [CluedoGame],
 
   // Per sicurezza nello sviluppo, accettiamo connessioni solo dal computer locale
-  origins: [Origins.LOCALHOST],
+  // In produzione, aggiungere l'URL del frontend deployato
+  origins: [Origins.LOCALHOST, 'http://localhost:5173'],
 });
+
+// ============================================
+// LOBBY API - Endpoints disponibili automaticamente:
+// ============================================
+// La Lobby API è già inclusa nel Server di boardgame.io!
+// 
+// POST   /games/cluedo-digital/create          → Crea un nuovo match
+//        Body: { numPlayers: number, setupData?: any, unlisted?: boolean }
+//        Response: { matchID: string }
+//
+// GET    /games/cluedo-digital                 → Lista tutti i match
+//        Response: { matches: Array<{ matchID, players, gameover, ... }> }
+//
+// GET    /games/cluedo-digital/{matchID}       → Dettagli di un match
+//        Response: { matchID, players, gameover, ... }
+//
+// POST   /games/cluedo-digital/{matchID}/join  → Unisciti a un match
+//        Body: { playerID: string, playerName: string, data?: any }
+//        Response: { playerCredentials: string }
+//
+// POST   /games/cluedo-digital/{matchID}/leave → Lascia un match
+//        Body: { playerID: string, credentials: string }
+//
+// POST   /games/cluedo-digital/{matchID}/playAgain → Crea un nuovo match con gli stessi giocatori
+//        Body: { playerID: string, credentials: string, unlisted?: boolean }
+//        Response: { nextMatchID: string }
+//
+// POST   /games/cluedo-digital/{matchID}/update → Aggiorna i metadati di un giocatore
+//        Body: { playerID: string, credentials: string, newName?: string, data?: any }
+// ============================================
 
 // Avviamo il server sulla porta 8000
 const PORT = 8000;
 server.run(PORT, () => {
   console.log(`Game Server attivo su http://localhost:${PORT}`);
+  console.log(`Lobby API disponibile su http://localhost:${PORT}/games/cluedo-digital`);
 });

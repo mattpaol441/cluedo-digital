@@ -1,32 +1,28 @@
 import React from 'react';
-import HamburgerSidebar from '../components/hamburgerSidebar/HamburgerSidebar';
+import { useNavigate } from 'react-router-dom';
+import HamburgerWithNotifications from '../components/hamburgerSidebar/HamburgerWithNotifications';
+import { useAppSelector } from '../store/hooks';
 
 import ActionCard from '../components/MenuCard/ActionCard';
 import ActionGrid from '../components/MenuCard/ActionGrid';
 import { Gamepad2, Plus, Trophy, Users } from 'lucide-react';
 
 const HomePage: React.FC = () => {
-    
-    // Simulated User Data
-    const currentUser = {
-        displayName: "Detective Conan",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Conan", // Esempio avatar
-        isOnline: true
-    };
+    const navigate = useNavigate();
+    const user = useAppSelector(state => state.user);
 
-    const handleAction = (action: string) => {
-        console.log("Azione cliccata:", action);
-        // Here we add the navigation logic based on action
+    // User data from Redux
+    const currentUser = {
+        displayName: user.displayName,
+        avatar: user.avatarUrl,
+        isOnline: user.isOnline
     };
 
     return (
         <div className="min-h-screen bg-slate-950 text-white relative">
-            
+
             {/* THE SIDEBAR MENU */}
-            <HamburgerSidebar 
-                user={currentUser} 
-                onNavigate={(path) => console.log("Navigazione HomePage:", path)}
-            />
+            <HamburgerWithNotifications user={currentUser} />
 
             {/* HOMEPAGE CONTENT */}
             <div className="p-20 text-center">
@@ -37,35 +33,35 @@ const HomePage: React.FC = () => {
                 {/* BUTTON GRID */}
                 <ActionGrid>
                     {/* Button 1: New Game */}
-                    <ActionCard 
-                        title="Nuova Partita" 
+                    <ActionCard
+                        title="Nuova Partita"
                         description="Crea una stanza o gioca in locale"
-                        icon={Gamepad2} 
-                        onClick={() => handleAction('new-game')}
+                        icon={Gamepad2}
+                        onClick={() => navigate('/new-game')}
                     />
 
                     {/* Button 2: Join (Multiplayer) */}
-                    <ActionCard 
-                        title="Unisciti" 
+                    <ActionCard
+                        title="Unisciti"
                         description="Entra in una partita esistente"
-                        icon={Plus} 
-                        onClick={() => handleAction('join-game')}
+                        icon={Plus}
+                        onClick={() => navigate('/join')}
                     />
 
                     {/* Button 3: Ranking */}
-                    <ActionCard 
-                        title="Classifica" 
+                    <ActionCard
+                        title="Classifica"
                         description="I migliori detective globali"
-                        icon={Trophy} 
-                        onClick={() => handleAction('ranking')}
+                        icon={Trophy}
+                        onClick={() => console.log('TODO: ranking page')}
                     />
 
                     {/* Button 4: Friends */}
-                    <ActionCard 
-                        title="Amici" 
+                    <ActionCard
+                        title="Amici"
                         description="Gestisci la tua lista amici"
-                        icon={Users} 
-                        onClick={() => handleAction('friends')}
+                        icon={Users}
+                        onClick={() => navigate('/friends')}
                     />
                 </ActionGrid>
             </div>

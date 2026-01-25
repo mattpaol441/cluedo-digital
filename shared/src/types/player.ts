@@ -10,6 +10,8 @@ export interface Player {
   name: string;           // Nome utente (es. "Mario")
   color: string;          // Colore associato (es. "#FF0000")
   character: SuspectID;   // Il personaggio interpretato (es. "mustard")
+
+  firebaseUID?: string;   // Firebase UID (per associare l'utente Firebase)
   
   // Posizione corrente sulla griglia
   position: Coordinate;

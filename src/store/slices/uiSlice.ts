@@ -1,32 +1,20 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 
- // UI Slice: gestisce lo stato dell'interfaccia utente, i dati volatili dell'UI (notifiche, tema, visibilità modali)
-  
- // Contiene:
- // - Notifiche globali (Toast)
- // - Tema/Preferenze visive
- // - Modal visibility states
- // - Loading states globali
- // 
- // Note:
- // - Separato da Game State (che è in BoardGame.io)
- // - Separato da User State (che è in userSlice)
- // - Questo è il "meta-game UI state" per notifiche, dialoghi, tema, etc.
- 
+// UI Slice: gestisce lo stato dell'interfaccia utente (tema, visibilità modali, loading)
 
-export interface Notification {
-  id: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  duration?: number; // ms, undefined = indefinite
-  timestamp: number;
-}
+// Contiene:
+// - Tema/Preferenze visive
+// - Modal visibility states
+// - Loading states globali
+// 
+// Note:
+// - Separato da Game State (che è in BoardGame.io)
+// - Separato da User State (che è in userSlice)
+// - I toast sono gestiti direttamente con react-hot-toast (non passano da Redux)
+
 
 export interface UIState {
-  // Notifiche
-  notifications: Notification[];
-
   // Tema
   isDarkMode: boolean;
 
@@ -38,7 +26,6 @@ export interface UIState {
 }
 
 const initialState: UIState = {
-  notifications: [],
   isDarkMode: false,
   modalsOpen: {
     settings: false,
@@ -52,24 +39,6 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    // Toast notifications globali
-    addNotification: (state, action: PayloadAction<Omit<Notification, 'id' | 'timestamp'>>) => {
-      const notification: Notification = {
-        ...action.payload,
-        id: `notification-${Date.now()}-${Math.random()}`,
-        timestamp: Date.now(),
-      };
-      state.notifications.push(notification);
-    },
-
-    removeNotification: (state, action: PayloadAction<string>) => {
-      state.notifications = state.notifications.filter((n) => n.id !== action.payload);
-    },
-
-    clearNotifications: (state) => {
-      state.notifications = [];
-    },
-
     // TEMA
     toggleDarkMode: (state) => {
       state.isDarkMode = !state.isDarkMode;
@@ -100,9 +69,6 @@ const uiSlice = createSlice({
 });
 
 export const {
-  addNotification,
-  removeNotification,
-  clearNotifications,
   toggleDarkMode,
   setDarkMode,
   openModal,

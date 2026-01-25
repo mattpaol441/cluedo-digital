@@ -18,8 +18,8 @@ const JoinGameForm: React.FC<JoinGameFormProps> = ({ onSubmit, isLoading = false
             setError("Inserisci un codice valido.");
             return;
         }
-        if (code.length < 4) {
-            setError("Il codice sembra troppo corto.");
+        if (code.length < 6) {
+            setError("Il codice deve essere di 6 caratteri.");
             return;
         }
 
@@ -28,8 +28,8 @@ const JoinGameForm: React.FC<JoinGameFormProps> = ({ onSubmit, isLoading = false
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Force uppercase
-        setCode(e.target.value.toUpperCase());
+        // Converti in maiuscolo (i codici room sono uppercase)
+        setCode(e.target.value.toUpperCase().trim());
         if (error) setError(null);
     };
 
@@ -61,11 +61,11 @@ const JoinGameForm: React.FC<JoinGameFormProps> = ({ onSubmit, isLoading = false
                                 id="roomCode"
                                 value={code}
                                 onChange={handleChange}
-                                placeholder="ES. ABCD12"
-                                maxLength={8} // Limit code length
+                                placeholder="Es: ABC123"
+                                maxLength={6}
                                 disabled={isLoading}
                                 className={`
-                                    w-full pl-10 pr-4 py-4 bg-slate-950 text-white font-mono text-2xl tracking-widest uppercase rounded-lg border 
+                                    w-full pl-10 pr-4 py-4 bg-slate-950 text-white font-mono text-lg tracking-widest uppercase rounded-lg border 
                                     focus:outline-none focus:ring-2 transition-all duration-200
                                     ${error 
                                         ? 'border-red-500 focus:ring-red-500/50' 

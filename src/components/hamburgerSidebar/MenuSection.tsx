@@ -14,6 +14,8 @@ interface MenuSectionProps {
     items: MenuItemData[];
     onNavigate: (path: string) => void;
     currentPath?: string;
+    badgeCount?: number; // Numero per il badge
+    badgeItemId?: string; // ID dell'item che deve mostrare il badge
 }
 
 const MenuSection: React.FC<MenuSectionProps> = ({
@@ -21,6 +23,8 @@ const MenuSection: React.FC<MenuSectionProps> = ({
     items,
     onNavigate,
     currentPath,
+    badgeCount = 0,
+    badgeItemId,
 }) => {
     return (
         <div className="flex flex-col gap-1 w-full">
@@ -29,7 +33,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({
                     {title}
                 </h4>
             )}
-            
+
             {items.map((item) => (
                 <MenuButton
                     key={item.id}
@@ -37,6 +41,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({
                     icon={item.icon}
                     onClick={() => onNavigate(item.path)}
                     isActive={currentPath === item.path}
+                    badge={item.id === badgeItemId ? badgeCount : undefined}
                 />
             ))}
         </div>
