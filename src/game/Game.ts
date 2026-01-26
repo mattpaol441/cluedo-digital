@@ -174,7 +174,10 @@ export const CluedoGame: Game<CluedoGameState> = {
       players: players,
       diceRoll: [0, 0],
       currentSuggestion: null,
-      lastRefutation: null
+      lastRefutation: null,
+      // TIMEOUT SYSTEM
+      turnStartedAt: undefined,
+      stageStartedAt: undefined
     };
   },
 
@@ -203,12 +206,16 @@ export const CluedoGame: Game<CluedoGameState> = {
       others: 'passive'  // Gli altri possono solo arrendersi
     },
 
-    // INIZIO TURNO (setup e controlli come resettare flag e dati temporanei all’inizio del turno, saltare il turno se il giocatore è eliminato ecc....)
+    // INIZIO TURNO (setup e controlli come resettare flag e dati temporanei all'inizio del turno, saltare il turno se il giocatore è eliminato ecc....)
     onBegin: ({ G, ctx, events }) => {
       // 1. Pulizia Dati Generali
       G.lastRefutation = null;
       G.currentSuggestion = null;
       G.diceRoll = [0, 0];
+
+      // TIMEOUT SYSTEM: Segna l'inizio del turno
+      G.turnStartedAt = Date.now();
+      G.stageStartedAt = undefined; // Reset stage timer
 
       const currentPlayer = G.players[ctx.currentPlayer];
 
@@ -264,8 +271,45 @@ export const CluedoGame: Game<CluedoGameState> = {
 
             if (activePlayersCount === 0) {
               console.log("[SERVER] GAME OVER: Tutti i giocatori si sono arresi.");
-              events.endGame({ winner: null, solution: G.secretEnvelope });
+              // Estraggo la soluzione nel formato corretto
+              const envelope = G.secretEnvelope;
+              const solution = {
+                suspectId: envelope.find(c => c.type === 'SUSPECT')?.id || 'Error',
+                weaponId: envelope.find(c => c.type === 'WEAPON')?.id || 'Error',
+                roomId: envelope.find(c => c.type === 'ROOM')?.id || 'Error'
+              };
+              events.endGame({ winner: null, solution });
             } else if (ctx.currentPlayer === playerID) {
+              events.endTurn();
+            }
+          },
+
+          // TIMEOUT SYSTEM: Elimina il giocatore di turno (chiamabile da qualsiasi client)
+          // Questa mossa permette a qualsiasi client connesso di eliminare il currentPlayer
+          // quando scade il timeout del turno. BoardGame.io gestisce le race condition.
+          timeoutCurrentPlayer: ({ G, ctx, events }) => {
+            const currentPlayerID = ctx.currentPlayer;
+            const player = G.players[currentPlayerID];
+
+            // Se già eliminato, non fare nulla
+            if (player.isEliminated) return;
+
+            console.log(`[SERVER] TIMEOUT TURNO - ${player.name} eliminato per inattività`);
+            player.isEliminated = true;
+
+            const activePlayersCount = Object.values(G.players).filter(p => !p.isEliminated).length;
+
+            if (activePlayersCount === 0) {
+              console.log("[SERVER] GAME OVER: Tutti i giocatori eliminati.");
+              // Estraggo la soluzione nel formato corretto
+              const envelope = G.secretEnvelope;
+              const solution = {
+                suspectId: envelope.find(c => c.type === 'SUSPECT')?.id || 'Error',
+                weaponId: envelope.find(c => c.type === 'WEAPON')?.id || 'Error',
+                roomId: envelope.find(c => c.type === 'ROOM')?.id || 'Error'
+              };
+              events.endGame({ winner: null, solution });
+            } else {
               events.endTurn();
             }
           },
@@ -497,6 +541,9 @@ export const CluedoGame: Game<CluedoGameState> = {
                 matchingCards: result.matchingCards // SALVIAMO LE CARTE CHE PUÒ MOSTRARE
               };
 
+              // TIMEOUT SYSTEM: Segna l'inizio della fase refutation
+              G.stageStartedAt = Date.now();
+
               // ATTIVIAMO LO STAGE: Il gioco si congela e tocca solo a result.playerID
               // Gli altri rimangono in 'passive' per poter fare surrender
               events.setActivePlayers({
@@ -611,6 +658,60 @@ export const CluedoGame: Game<CluedoGameState> = {
             }
           },
 
+          // TIMEOUT SYSTEM: Smentita automatica (chiamabile da action, per il currentPlayer/suggester)
+          // Permette al suggester di forzare la smentita quando scade il timeout
+          skipRefutation: ({ G, events }) => {
+            const suggestion = G.currentSuggestion;
+
+            // Sicurezza: Se non c'è nessuna ipotesi attiva, esci
+            if (!suggestion) return;
+
+            const currentResponderID = suggestion.currentResponder;
+            const matchingCards = suggestion.matchingCards;
+
+            console.log(`[SERVER] Timeout smentita (action) - Player ${currentResponderID}`);
+
+            // Se il player ha carte che matchano, ne mostriamo una a caso
+            if (matchingCards.length > 0) {
+              const randomIndex = Math.floor(Math.random() * matchingCards.length);
+              const randomCardId = matchingCards[randomIndex];
+
+              console.log(`[SERVER] Auto-mostra carta: ${randomCardId}`);
+
+              const player = G.players[currentResponderID!];
+              const cardObj = player.hand.find(c => c.id === randomCardId);
+
+              G.lastRefutation = {
+                suggesterId: suggestion.suggesterId,
+                refuterId: currentResponderID!,
+                cardShown: cardObj || null
+              };
+
+              G.currentSuggestion = null;
+              G.stageStartedAt = undefined;
+
+              events.setActivePlayers({
+                currentPlayer: 'action',
+                others: 'passive'
+              });
+            } else {
+              console.warn('[SERVER] skipRefutation (action) - nessuna carta disponibile');
+
+              G.lastRefutation = {
+                suggesterId: suggestion.suggesterId,
+                refuterId: null,
+                cardShown: null
+              };
+              G.currentSuggestion = null;
+              G.stageStartedAt = undefined;
+
+              events.setActivePlayers({
+                currentPlayer: 'action',
+                others: 'passive'
+              });
+            }
+          }
+
         }
       },
 
@@ -650,6 +751,7 @@ export const CluedoGame: Game<CluedoGameState> = {
 
             // 2. Puliamo lo stato di attesa
             G.currentSuggestion = null;
+            G.stageStartedAt = undefined; // Reset timer stage
 
             // 3. FINE DEL TURNO
             // Poiché siamo nel turno del "Suggester" (ma sta agendo il "Refuter"),
@@ -661,12 +763,75 @@ export const CluedoGame: Game<CluedoGameState> = {
               currentPlayer: 'action',
               others: 'passive'
             });
+          },
+
+          // TIMEOUT SYSTEM: Mossa per gestire timeout smentita (chiamata automaticamente dal timer)
+          // REGOLA CLUEDO: Se hai carte per smentire, DEVI mostrarne una.
+          // Quindi invece di "saltare", il sistema sceglie automaticamente una carta random.
+          skipRefutation: ({ G, events }) => {
+            const suggestion = G.currentSuggestion;
+
+            // Sicurezza: Se non c'è nessuna ipotesi attiva, esci
+            if (!suggestion) return;
+
+            const currentResponderID = suggestion.currentResponder;
+            const matchingCards = suggestion.matchingCards;
+
+            console.log(`[SERVER] Timeout smentita - Player ${currentResponderID}`);
+
+            // Se il player ha carte che matchano, ne mostriamo una a caso
+            if (matchingCards.length > 0) {
+              // Selezione random di una carta tra quelle disponibili
+              const randomIndex = Math.floor(Math.random() * matchingCards.length);
+              const randomCardId = matchingCards[randomIndex];
+
+              console.log(`[SERVER] Auto-mostra carta: ${randomCardId} (scelta random tra ${matchingCards.length} opzioni)`);
+
+              // Recuperiamo l'oggetto carta completo dalla mano del giocatore
+              const player = G.players[currentResponderID!];
+              const cardObj = player.hand.find(c => c.id === randomCardId);
+
+              // Salviamo il risultato (stessa logica di refuteSuggestion)
+              G.lastRefutation = {
+                suggesterId: suggestion.suggesterId,
+                refuterId: currentResponderID!,
+                cardShown: cardObj || null
+              };
+
+              // Puliamo lo stato
+              G.currentSuggestion = null;
+              G.stageStartedAt = undefined;
+
+              // Ripristiniamo gli stage normali
+              events.setActivePlayers({
+                currentPlayer: 'action',
+                others: 'passive'
+              });
+
+            } else {
+              // Caso edge: il player non ha carte (non dovrebbe mai accadere se la logica è corretta)
+              // Ma per sicurezza, resettiamo comunque lo stato
+              console.warn('[SERVER] skipRefutation chiamato ma nessuna carta disponibile - reset stato');
+
+              G.lastRefutation = {
+                suggesterId: suggestion.suggesterId,
+                refuterId: null,
+                cardShown: null
+              };
+              G.currentSuggestion = null;
+              G.stageStartedAt = undefined;
+
+              events.setActivePlayers({
+                currentPlayer: 'action',
+                others: 'passive'
+              });
+            }
           }
         }
       },
 
       // FASE PASSIVA: per i giocatori che NON hanno il turno
-      // Possono solo arrendersi, nient'altro
+      // Possono arrendersi e chiamare il timeout del giocatore corrente
       passive: {
         moves: {
 
@@ -682,9 +847,99 @@ export const CluedoGame: Game<CluedoGameState> = {
 
             if (activePlayersCount === 0) {
               console.log("[SERVER] GAME OVER: Tutti i giocatori si sono arresi.");
-              events.endGame({ winner: null, solution: G.secretEnvelope });
+              // Estraggo la soluzione nel formato corretto
+              const envelope = G.secretEnvelope;
+              const solution = {
+                suspectId: envelope.find(c => c.type === 'SUSPECT')?.id || 'Error',
+                weaponId: envelope.find(c => c.type === 'WEAPON')?.id || 'Error',
+                roomId: envelope.find(c => c.type === 'ROOM')?.id || 'Error'
+              };
+              events.endGame({ winner: null, solution });
             }
             // Non chiamo endTurn() perché non è il turno di questo giocatore
+          },
+
+          // TIMEOUT SYSTEM: Elimina il giocatore di turno (chiamabile da passive)
+          // Permette agli altri client di eliminare il currentPlayer quando scade il timeout
+          timeoutCurrentPlayer: ({ G, ctx, events }) => {
+            const currentPlayerID = ctx.currentPlayer;
+            const player = G.players[currentPlayerID];
+
+            // Se già eliminato, non fare nulla
+            if (player.isEliminated) return;
+
+            console.log(`[SERVER] TIMEOUT TURNO (passive) - ${player.name} eliminato per inattività`);
+            player.isEliminated = true;
+
+            const activePlayersCount = Object.values(G.players).filter(p => !p.isEliminated).length;
+
+            if (activePlayersCount === 0) {
+              console.log("[SERVER] GAME OVER: Tutti i giocatori eliminati.");
+              // Estraggo la soluzione nel formato corretto
+              const envelope = G.secretEnvelope;
+              const solution = {
+                suspectId: envelope.find(c => c.type === 'SUSPECT')?.id || 'Error',
+                weaponId: envelope.find(c => c.type === 'WEAPON')?.id || 'Error',
+                roomId: envelope.find(c => c.type === 'ROOM')?.id || 'Error'
+              };
+              events.endGame({ winner: null, solution });
+            } else {
+              events.endTurn();
+            }
+          },
+
+          // TIMEOUT SYSTEM: Smentita automatica (chiamabile da passive)
+          // Permette a qualsiasi client di forzare la smentita quando scade il timeout
+          skipRefutation: ({ G, events }) => {
+            const suggestion = G.currentSuggestion;
+
+            // Sicurezza: Se non c'è nessuna ipotesi attiva, esci
+            if (!suggestion) return;
+
+            const currentResponderID = suggestion.currentResponder;
+            const matchingCards = suggestion.matchingCards;
+
+            console.log(`[SERVER] Timeout smentita (passive) - Player ${currentResponderID}`);
+
+            // Se il player ha carte che matchano, ne mostriamo una a caso
+            if (matchingCards.length > 0) {
+              const randomIndex = Math.floor(Math.random() * matchingCards.length);
+              const randomCardId = matchingCards[randomIndex];
+
+              console.log(`[SERVER] Auto-mostra carta: ${randomCardId}`);
+
+              const player = G.players[currentResponderID!];
+              const cardObj = player.hand.find(c => c.id === randomCardId);
+
+              G.lastRefutation = {
+                suggesterId: suggestion.suggesterId,
+                refuterId: currentResponderID!,
+                cardShown: cardObj || null
+              };
+
+              G.currentSuggestion = null;
+              G.stageStartedAt = undefined;
+
+              events.setActivePlayers({
+                currentPlayer: 'action',
+                others: 'passive'
+              });
+            } else {
+              console.warn('[SERVER] skipRefutation (passive) - nessuna carta disponibile');
+
+              G.lastRefutation = {
+                suggesterId: suggestion.suggesterId,
+                refuterId: null,
+                cardShown: null
+              };
+              G.currentSuggestion = null;
+              G.stageStartedAt = undefined;
+
+              events.setActivePlayers({
+                currentPlayer: 'action',
+                others: 'passive'
+              });
+            }
           }
         }
       }
