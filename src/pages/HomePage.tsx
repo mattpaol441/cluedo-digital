@@ -26,10 +26,8 @@ const HomePage: React.FC = () => {
 
             {/* HOMEPAGE CONTENT */}
             <div className="p-20 text-center">
-                <h1 className="text-4xl font-bold mb-4">Benvenuto su Cluedo Digital</h1>
-                <p className="text-slate-400">
-                    Premi il tasto menu in alto a sinistra per iniziare.
-                </p>
+                <h1 className="text-4xl font-bold mb-4">Benvenuto su Cluedo Digital!</h1>
+
                 {/* BUTTON GRID */}
                 <ActionGrid>
                     {/* Button 1: New Game */}

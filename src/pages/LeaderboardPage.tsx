@@ -22,6 +22,13 @@ const LeaderboardPage: React.FC = () => {
     // 1. Get Current User Data
     const user = useAppSelector(state => state.user);
 
+    // User data from Redux
+    const currentUser = {
+        displayName: user.displayName,
+        avatar: user.avatarUrl,
+        isOnline: user.isOnline
+    };
+
     // 2. Get Friends Data
     const { friends } = useFriends();
 
@@ -79,7 +86,7 @@ const LeaderboardPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-950 text-white relative">
-            <HamburgerWithNotifications user={user} />
+            <HamburgerWithNotifications user={currentUser} />
 
             <div className="p-4 md:p-8 overflow-y-auto h-screen">
                 <div className="max-w-4xl mx-auto pb-20">
