@@ -95,7 +95,7 @@ const RootLayout: React.FC = () => {
     <>
       <Outlet />
       <Toaster
-        position="bottom-right"
+        position="top-center"
         toastOptions={{
           style: {
             background: '#1e293b',
