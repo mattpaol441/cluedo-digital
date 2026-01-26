@@ -53,7 +53,7 @@ const HomePage: React.FC = () => {
                         title="Classifica"
                         description="I migliori detective globali"
                         icon={Trophy}
-                        onClick={() => console.log('TODO: ranking page')}
+                        onClick={() => navigate('/leaderboard')}
                     />
 
                     {/* Button 4: Friends */}

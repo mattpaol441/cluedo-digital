@@ -16,12 +16,15 @@ export interface Friendship {
     createdAt: Timestamp;
 }
 
+import type { UserStats } from './user';
+
 // Profilo amico con stato online (per UI, utilizzato nella lista degli amici visualizzata)
 export interface FriendProfile {
     uid: string;
     displayName: string;
     avatarUrl?: string;
     isOnline: boolean;
+    stats: UserStats;
 }
 
 // RICHIESTE DI AMICIZIA

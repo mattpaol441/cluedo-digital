@@ -65,7 +65,8 @@ export async function getFriendProfiles(uid: string): Promise<FriendProfile[]> {
                 uid: friendUID,
                 displayName: data.displayName,
                 avatarUrl: data.avatarUrl,
-                isOnline: (data as any).isOnline || false // Campo che aggiungeremo
+                isOnline: (data as any).isOnline || false, // Campo che aggiungeremo
+                stats: data.stats || { gamesPlayed: 0, wins: 0, losses: 0 }
             });
         }
     }

@@ -25,6 +25,7 @@ import ErrorPage from './components/ErrorPage';
 import StatsPage from './pages/StatsPage';
 import FriendsPage from './pages/FriendsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 // Services
 import { getStoredCredentials, clearMatchCredentials } from './services/lobbyClient';
@@ -218,6 +219,10 @@ export const router = createBrowserRouter([
       {
         path: 'notifications',
         element: <NotificationsPage />,
+      },
+      {
+        path: 'leaderboard',
+        element: <LeaderboardPage />,
       },
     ],
   },
