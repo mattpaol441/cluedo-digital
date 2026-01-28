@@ -11,7 +11,9 @@
 // - Aggiornamento metadati giocatore (nome, dati custom)
 
 // Configurazione del server
-const LOBBY_SERVER_URL = 'http://localhost:8000';
+const LOBBY_SERVER_URL = import.meta.env.DEV 
+  ? 'http://localhost:8000' 
+  : window.location.origin;
 const GAME_NAME = 'cluedo-digital';
 
 
