@@ -10,7 +10,7 @@ export class SmartBot extends Bot {
     rooms: string[];
   };
 
-  constructor({ enumerate, seed, game, delay }: any) {
+  constructor({ enumerate, seed, delay }: any) {
     super({ enumerate, seed });
     this.delay = delay || 1000;
     this.knownCards = new Set();

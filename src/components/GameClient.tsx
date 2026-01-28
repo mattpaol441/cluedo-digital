@@ -7,7 +7,6 @@
 import React, { useMemo } from 'react';
 import { Client } from 'boardgame.io/react';
 import { SocketIO, Local } from 'boardgame.io/multiplayer';
-import { RandomBot } from 'boardgame.io/ai';
 import { CluedoGame } from '../game/Game';
 import GameBoard from '../game/GameBoard';
 

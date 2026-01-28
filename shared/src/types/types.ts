@@ -11,9 +11,9 @@
 // - Usiamo "name" per nomi leggibili (es. "Col. Mustard")
 // - Usiamo "playerID" per identificare i giocatori nella partita ("0", "1", ecc)
 
-import type { SuggestionState } from "./game.js";
-import type { Player } from "./player.js";
-import type { Card } from "./models.js";
+// import type { SuggestionState } from "./game.js";
+// import type { Player } from "./player.js";
+// import type { Card } from "./models.js";
 
 // --- 1. ENTITÀ DI BASE (Carte e Identificativi) ---
 
