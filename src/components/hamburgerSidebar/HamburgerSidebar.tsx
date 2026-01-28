@@ -23,8 +23,8 @@ const PRIMARY_MENU: MenuItemData[] = [
 
 const SECONDARY_MENU: MenuItemData[] = [
     { id: 'notify', label: 'Notifiche', icon: Bell, path: '/notifications' },
-    { id: 'settings', label: 'Impostazioni', icon: Settings, path: '/home' }, // TODO: settings page
-    { id: 'help', label: 'Supporto', icon: HelpCircle, path: '/home' }, // TODO: help page
+    { id: 'settings', label: 'Impostazioni', icon: Settings, path: '/profile' },
+    { id: 'help', label: 'Supporto', icon: HelpCircle, path: '/help' },
 ];
 
 interface HamburgerSidebarProps {

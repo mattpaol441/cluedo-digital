@@ -13,6 +13,7 @@ import DiceRoller from "./DiceRoller";
 import { getCardImage } from "../utils/assets";
 import { clearMatchCredentials } from "../services/lobbyClient";
 import { Dices, LogOut, AlertTriangle, Home, Clock } from "lucide-react";
+import background from '../assets/board/bgcluedo.jpg';
 
 // Tipo delle props che GamePage riceve: sono le props standard di una board di boardgame.io, parametrizzate con il tipo di stato del gioco Cluedo.
 type GamePageProps = BoardProps<CluedoGameState>;
@@ -283,8 +284,19 @@ const GamePage: React.FC<GamePageProps> = (props) => { // Definiamo il component
 
                 {/* CENTER COLUMN: BOARD, mostra la plancia di gioco tramite il componente <Board />, che riceve tutte le props necessarie */}
                 <main className="flex-1 relative bg-slate-800/50 flex items-center justify-center p-2 overflow-hidden">
+                {/* --- BACKGROUND IMAGE --- */}
+                    <div className="absolute inset-0 z-0 select-none pointer-events-none">
+                        {/* Immagine di sfondo */}
+                        <img 
+                            src={background} 
+                            alt="Table Background" 
+                            className="w-full h-full object-cover opacity-20 blur-[2px]" 
+                        />
+                        {/* Overlay sfumato per scurire ulteriormente e uniformare */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-slate-900/20 to-slate-900/50" />
+                    </div>
 
-                    <div className="h-full aspect-square max-w-full shadow-2xl rounded-lg border border-slate-700 overflow-hidden">
+                    <div className="relative z-10 h-full aspect-square max-w-full shadow-2xl rounded-lg border border-slate-700 overflow-hidden">
                         <Board {...props} />
                     </div>
                 </main>

@@ -22,10 +22,10 @@ export const HypothesisModal: React.FC<HypothesisModalProps> = ({ currentRoomId,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in pointer-events-none">
       
       {/* CARD PRINCIPALE: Usati bordi BLU per distinguerlo dall'Accusa (Rossa) */}
-      <div className="bg-slate-800 border-2 border-blue-500 rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative">
+      <div className="bg-slate-800 border-2 border-blue-500 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-md overflow-hidden relative pointer-events-auto">
         
         {/* HEADER */}
         <div className="bg-blue-700 p-4 text-center shadow-md">

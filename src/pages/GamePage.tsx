@@ -23,7 +23,7 @@ export default function GamePage() {
         matchID="local"
         playerID="0"
         credentials=""
-        numPlayers={6}
+        numPlayers={2}
       />
     );
   }

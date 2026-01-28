@@ -4,6 +4,7 @@ import React from 'react';
 import GameCard from '../game/GameCard';
 import { getCardImage } from '../utils/assets'; // Assicurati di avere questo import corretto
 import { getCardById } from '@cluedo-digital/shared';
+import { useNavigate } from 'react-router-dom';
 
 interface GameOverModalProps {
   winnerName: string;
@@ -12,6 +13,8 @@ interface GameOverModalProps {
 }
 
 export const GameOverModal: React.FC<GameOverModalProps> = ({ winnerName, solution, isVictory }) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white p-8 rounded-lg shadow-2xl max-w-lg w-full text-center border-4 border-slate-800">
@@ -55,7 +58,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({ winnerName, soluti
 
         <button 
           className="mt-8 px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-full transition-all"
-          onClick={() => window.location.reload()}
+          onClick={() => navigate('/home')}
         >
           Nuova Partita
         </button>

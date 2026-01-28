@@ -569,7 +569,7 @@ export const CluedoGame: Game<CluedoGameState> = {
               // Qui il turno finisce (o lasciamo che l'utente clicchi "Fine Turno" dopo aver visto il messaggio)
               // Per ora chiudiamo il turno per mantenere il flusso veloce
 
-              // events.endTurn(); // TEMPORANEO PER TEST
+              //events.endTurn(); // TEMPORANEO PER TEST
             }
           },
 
@@ -710,7 +710,31 @@ export const CluedoGame: Game<CluedoGameState> = {
                 others: 'passive'
               });
             }
-          }
+          },
+
+          passTurn: ({ events, G, ctx }) => {
+            const player = G.players[ctx.currentPlayer];
+  
+            // 1. Reset flag del giocatore
+            player.enteredManually = false; 
+            player.hasMoved = false; 
+            player.validMoves = []; // Importante svuotare le mosse vecchie
+
+            // 2. Reset Variabili Globali
+            G.lastRefutation = null;
+            G.currentSuggestion = null;
+            G.diceRoll = [0, 0]; // Sicurezza extra
+
+            console.log(`[SERVER] ${player.name} passa il turno.`);
+            
+            // 3. Reset Stage e ActivePlayers (FONDAMENTALE)
+            // Assicuriamoci che il prossimo giocatore inizi pulito in 'action'
+            events.setActivePlayers({ currentPlayer: 'action', others: 'passive' });
+            
+            // 4. Fine Turno
+            events.endTurn();
+
+        }
 
         }
       },
@@ -946,8 +970,74 @@ export const CluedoGame: Game<CluedoGameState> = {
     }
   },
 
-  // // Condizioni di vittoria/fine
-  // endIf: (G, ctx) => {
-  //   // Logica vittoria (da implementare dopo)
-  // }
+  ai: {
+    enumerate: (G, ctx, playerID) => {
+      const moves: { move: string; args?: any[] }[] = [];
+      const pID = String(playerID);
+      const player = G.players[pID];
+
+      if (!player || player.isEliminated) return [];
+
+      // 1. SMENTITA (Priorità)
+      const suggestion = G.currentSuggestion;
+      if (suggestion && String(suggestion.currentResponder) === pID) {
+        const matchingCards = suggestion.matchingCards;
+        if (matchingCards.length > 0) {
+          // Restituisci TUTTE le opzioni valide, il Bot sceglierà
+          matchingCards.forEach((cardId: string) => {
+             moves.push({ move: 'refuteSuggestion', args: [cardId] });
+          });
+          return moves;
+        }
+        return []; 
+      }
+
+      if (String(ctx.currentPlayer) !== pID) return [];
+
+      // Check fine fase smentita
+      if (G.lastRefutation && String(G.lastRefutation.suggesterId) === pID) {
+        return [{ move: 'passTurn' }];
+      }
+
+      // 2. ACCUSA (Endgame)
+      // Se sono al centro, offro la possibilità di accusare
+      if (player.currentRoom === 'CENTER_ROOM') {
+          // Args dummy, il SmartBot li sovrascriverà con la soluzione vera
+          moves.push({ move: 'makeAccusation', args: ['suspect', 'weapon', 'room'] });
+      }
+
+      // 3. IPOTESI
+      const isInRoom = player.currentRoom && player.currentRoom !== 'CENTER_ROOM';
+      const canMakeHypothesis = isInRoom && (player.enteredManually || player.wasMovedBySuggestion);
+
+      if (canMakeHypothesis) {
+        // Args dummy, SmartBot li sovrascriverà
+        moves.push({ move: 'makeHypothesis', args: ['suspect', 'weapon'] });
+        // Non ritorniamo subito, perché potremmo voler fare altro? No, ipotesi è bloccante.
+        return moves;
+      }
+
+      // 4. DADI
+      if (G.diceRoll[0] === 0 && G.diceRoll[1] === 0) {
+        return [{ move: 'rollDice'}];
+      }
+
+      // 5. MOVIMENTO
+      if ((G.diceRoll[0] > 0 || G.diceRoll[1] > 0) && !player.hasMoved) {
+        if (player.validMoves && player.validMoves.length > 0) {
+          
+          // Aggiungi tutte le mosse. SmartBot sceglierà.
+          // Possiamo dare un "suggerimento" mettendo prima quelle delle stanze
+          player.validMoves.forEach((coordKey: string) => {
+             const [x, y] = coordKey.split(',').map(Number);
+             moves.push({ move: 'movePawn', args: [x, y] });
+          });
+          return moves;
+        }
+      } 
+      
+      // 6. FALLBACK
+      return [{ move: 'passTurn' }];
+    },
+  },
 };
