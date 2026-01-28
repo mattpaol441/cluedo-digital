@@ -12,6 +12,7 @@
     "dev:vite": "vite",
     "server": "npm run build:shared && npx tsx src/server.ts",
     "build": "npm run build:shared && tsc -b && vite build",
+    "start": "npx tsx src/server.ts",
     "build:shared": "npm run build -w shared",
     "lint": "eslint .",
     "preview": "vite preview"

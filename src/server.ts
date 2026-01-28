@@ -16,6 +16,9 @@
 import { Server, Origins } from 'boardgame.io/dist/cjs/server.js'; // Così accediamo a una "macchina" gigantesca che è nascosta dentro la libreria boardgame.io che avvia un server web (basato su un framework chiamato Koa), attiva Socket.io aprendo i canali di comunicazione automaticamente, e 
 // crea di default uno spazio nella RAM per salvare lo stato (G) di tutte le partite attive
 import { CluedoGame } from './game/Game';
+import path from 'path';
+import serve from 'koa-static';
+import { historyApiFallback } from 'koa2-connect-history-api-fallback';
 
 const server = Server({
   // Carichiamo le regole definite sopra e le passiamo al server come fossero il suo libretto di istruzioni (altrimenti non saprebbe come si gioca)
@@ -23,7 +26,7 @@ const server = Server({
 
   // Per sicurezza nello sviluppo, accettiamo connessioni solo dal computer locale
   // In produzione, aggiungere l'URL del frontend deployato
-  origins: [Origins.LOCALHOST, 'http://localhost:5173'],
+  origins: [Origins.LOCALHOST_IN_DEVELOPMENT, '*'],
 });
 
 // ============================================
@@ -57,7 +60,20 @@ const server = Server({
 // ============================================
 
 // Avviamo il server sulla porta 8000
-const PORT = 8000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8000;
+
+const app = server.app;
+const distPath = path.join(process.cwd(), 'dist');
+app.use(historyApiFallback({
+  index: '/index.html',
+
+  whiteList: ['/games', '/socket.io'], // Non fare fallback per questi path
+}));
+
+app.use(serve(distPath)); // Serviamo i file statici (frontend) dalla cartella /dist
+
+
+
 server.run(PORT, () => {
   console.log(`Game Server attivo su http://localhost:${PORT}`);
   console.log(`Lobby API disponibile su http://localhost:${PORT}/games/cluedo-digital`);

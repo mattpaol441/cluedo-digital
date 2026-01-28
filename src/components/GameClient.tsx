@@ -20,6 +20,15 @@ interface GameClientProps {
   numPlayers?: number;
 }
 
+const getServerURL = () => {
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8000';
+  }
+  // In produzione, undefined significa "usa la stessa origine/dominio della pagina web"
+  // che è esattamente quello che vogliamo nel Unified Deployment
+  return undefined; 
+};
+
 const GameClient: React.FC<GameClientProps> = ({ 
   matchID, 
   playerID, 
@@ -59,7 +68,7 @@ const GameClient: React.FC<GameClientProps> = ({
       board: GameBoard,
       numPlayers: numPlayers,
       multiplayer: isLocal ? Local({bots: bots}) : SocketIO({
-        server: 'http://localhost:8000',
+        server: getServerURL(),
       }),
       debug: import.meta.env.DEV, // Debug solo in development
     });
