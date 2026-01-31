@@ -26,9 +26,9 @@ export const AccusationModal: React.FC<AccusationModalProps> = ({ onSubmit }) =>
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in pointer-events-none">
       
-      <div className="bg-white rounded-xl shadow-[0_35px_60px_-15px_rgba(0,0,0,0.5)] w-full max-w-md overflow-hidden border-4 border-red-600 animate-bounce-in">
+      <div className="bg-slate-800 border-2 border-red-500 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-full max-w-md overflow-hidden relative pointer-events-auto">
         
         <div className="bg-red-600 p-6 text-center shadow-md">
           <h2 className="text-3xl font-black text-white uppercase tracking-widest mb-2">

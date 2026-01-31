@@ -5,9 +5,9 @@ import { Github, Linkedin, Mail, Code2, Bug, BookOpen, HamburgerIcon } from 'luc
 // Componenti riutilizzabili dell'app
 // import HamburgerSidebar from '../components/hamburgerSidebar/HamburgerSidebar';
 import ProfileView from '../components/ProfileView'; // Riutilizziamo il tuo componente!
-import HamburgerWithNotifications from 'src/components/hamburgerSidebar/HamburgerWithNotifications';
+import HamburgerWithNotifications from '../components/hamburgerSidebar/HamburgerWithNotifications';
 
-// --- DATI STATICI (CONFIGURAZIONE) ---
+// DATI STATICI (CONFIGURAZIONE) 
 
 const TEAM_MEMBERS = [
     {
@@ -55,7 +55,7 @@ const FAQS = [
     }
 ];
 
-// --- SOTTO-COMPONENTI (ATOMS & MOLECULES) ---
+// SOTTO-COMPONENTI (ATOMS & MOLECULES)
 
 const TeamCard: React.FC<{ member: typeof TEAM_MEMBERS[0] }> = ({ member }) => (
     <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 flex flex-col items-center gap-4 hover:border-yellow-500 transition-colors group">
@@ -95,7 +95,7 @@ const TechBadge: React.FC<{ label: string }> = ({ label }) => (
 );
 
 
-// --- PAGINA PRINCIPALE (ORGANISM) ---
+// PAGINA PRINCIPALE (ORGANISM)
 
 const SupportPage: React.FC = () => {
     const user = useAppSelector(state => state.user);
@@ -108,7 +108,7 @@ const SupportPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col relative overflow-x-hidden">
+        <div className="min-h-screen bg-slate-950 text-white relative">
 
             {/* Sidebar di Navigazione */}
             <HamburgerWithNotifications user={currentUser} />
