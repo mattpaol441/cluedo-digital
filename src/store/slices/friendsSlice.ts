@@ -29,7 +29,7 @@ import {
     rejectLobbyInvite as rejectLobbyInviteFirebase,
 } from '../../firebase/lobbyInvites';
 
-// STATO
+// STATO: come memorizziamo
 
 export interface FriendsState {
     // Lista amici con stato online

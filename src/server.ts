@@ -13,8 +13,9 @@
 
 // NOTA BENE: Puntiamo esplicitamente alla versione CJS per evitare errori di importazione ESM e per garantire la stabilità su Node 22
 // @ts-expect-error - boardgame.io non fornisce tipi per l'import CJS diretto, ma funziona a runtime
-import { Server, Origins } from 'boardgame.io/dist/cjs/server.js'; // Così accediamo a una "macchina" gigantesca che è nascosta dentro la libreria boardgame.io che avvia un server web (basato su un framework chiamato Koa), attiva Socket.io aprendo i canali di comunicazione automaticamente, e 
-// crea di default uno spazio nella RAM per salvare lo stato (G) di tutte le partite attive
+import { Server, Origins } from 'boardgame.io/dist/cjs/server.js'; // Così accediamo a una "macchina" gigantesca che è nascosta dentro la libreria boardgame.io
+// che avvia un server web (basato su un framework chiamato Koa), attiva Socket.io aprendo i canali di comunicazione automaticamente, 
+// e crea di default uno spazio nella RAM per salvare lo stato (G) di tutte le partite attive
 import { CluedoGame } from './game/Game';
 
 const server = Server({
@@ -25,36 +26,6 @@ const server = Server({
   // In produzione, aggiungere l'URL del frontend deployato
   origins: [Origins.LOCALHOST, 'http://localhost:5173'],
 });
-
-// ============================================
-// LOBBY API - Endpoints disponibili automaticamente:
-// ============================================
-// La Lobby API è già inclusa nel Server di boardgame.io!
-// 
-// POST   /games/cluedo-digital/create          → Crea un nuovo match
-//        Body: { numPlayers: number, setupData?: any, unlisted?: boolean }
-//        Response: { matchID: string }
-//
-// GET    /games/cluedo-digital                 → Lista tutti i match
-//        Response: { matches: Array<{ matchID, players, gameover, ... }> }
-//
-// GET    /games/cluedo-digital/{matchID}       → Dettagli di un match
-//        Response: { matchID, players, gameover, ... }
-//
-// POST   /games/cluedo-digital/{matchID}/join  → Unisciti a un match
-//        Body: { playerID: string, playerName: string, data?: any }
-//        Response: { playerCredentials: string }
-//
-// POST   /games/cluedo-digital/{matchID}/leave → Lascia un match
-//        Body: { playerID: string, credentials: string }
-//
-// POST   /games/cluedo-digital/{matchID}/playAgain → Crea un nuovo match con gli stessi giocatori
-//        Body: { playerID: string, credentials: string, unlisted?: boolean }
-//        Response: { nextMatchID: string }
-//
-// POST   /games/cluedo-digital/{matchID}/update → Aggiorna i metadati di un giocatore
-//        Body: { playerID: string, credentials: string, newName?: string, data?: any }
-// ============================================
 
 // Avviamo il server sulla porta 8000
 const PORT = 8000;

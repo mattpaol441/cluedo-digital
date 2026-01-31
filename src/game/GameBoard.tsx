@@ -66,9 +66,8 @@ const GamePage: React.FC<GamePageProps> = (props) => { // Definiamo il component
     // Identify my player: cerchiamo il giocatore (oggetto player) corrispondente al playerID corrente, se esiste.
     const myPlayer = playerID ? G.players[playerID] : null;
 
-    // ========================================
+
     // TIMEOUT SYSTEM
-    // ========================================
 
     // Determina se è il mio turno
     const isMyTurn = playerID === ctx.currentPlayer;

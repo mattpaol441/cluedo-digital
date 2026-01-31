@@ -257,7 +257,6 @@ export function usePreLobby() {
           // QUI passiamo i metadati che legano all'utente Firebase
           { firebaseUID: player.uid, avatarUrl: player.avatarUrl }
         );
-
         // Il server risponde con la password segreta (playerCredentials).
         // L'host la salva nella mappa associandola all'UID di quel giocatore.
         credentials[player.uid] = playerCredentials;

@@ -1,6 +1,5 @@
-/**
- * ErrorPage.tsx - Pagina di errore per React Router
- */
+
+// ErrorPage.tsx - Pagina di errore per React Router
 
 import React from 'react';
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
@@ -31,11 +30,11 @@ const ErrorPage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
       <div className="text-center max-w-md">
         <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-6" />
-        
+
         <h1 className="text-6xl font-bold text-white mb-2">{errorCode}</h1>
-        
+
         <p className="text-xl text-slate-400 mb-8">{errorMessage}</p>
-        
+
         <Link
           to="/home"
           className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-lg transition-colors"

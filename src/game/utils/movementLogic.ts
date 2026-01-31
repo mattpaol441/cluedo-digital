@@ -9,19 +9,18 @@ const DIRECTIONS = [
     { dx: 1, dy: 0 },  // Right
 ];
 
-/**
- *  Calculate all valid cells from a starting point and a number of steps (dice roll
- * @param startX Starting X coordinate
- * @param startY Starting Y coordinate
- * @param steps Number of steps available (sum of dice)
- * @param players Current players on the board
- * @param currentPlayerId ID of the current player 
- * @returns String array of valid coordinates in "x,y" format
- */
+
+// Calculate all valid cells from a starting point and a number of steps (dice roll)
+// @param startX Starting X coordinate
+// @param startY Starting Y coordinate
+// @param steps Number of steps available (sum of dice)
+// @param players Current players on the board
+// @param currentPlayerId ID of the current player 
+// @returns String array of valid coordinates in "x,y" format
 export const getValidMoves = (
-    startX: number, 
-    startY: number, 
-    steps: number, 
+    startX: number,
+    startY: number,
+    steps: number,
     players: Record<string, Player>,
     currentPlayerId: string
 ): string[] => {
@@ -47,7 +46,7 @@ export const getValidMoves = (
             const newY = y + dy;
             const coordKey = `${newX},${newY}`;
 
-            // -- CHEKS --
+            // CHECKS
             // 1. Check bounds
             if (newY < 0 || newY >= BOARD_LAYOUT.length || newX < 0 || newX >= BOARD_LAYOUT[0].length) {
                 continue;

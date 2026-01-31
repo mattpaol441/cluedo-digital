@@ -2,7 +2,7 @@
 // Si occupa solo di gestire la memoria del taccuino
 import { useState, useEffect, useCallback } from "react";
 // Importiamo il tipo definitivo per il taccuino in types.ts
-import type { NotebookState } from "@cluedo-digital/shared"; 
+import type { NotebookState } from "@cluedo-digital/shared";
 
 // NOTE sul perchè uso matchID e myPlayerID:
 // Vogliamo che il taccuino sia PRIVATO per ogni giocatore e per ogni partita.
@@ -48,7 +48,7 @@ export function useNotebook(matchID: string, myPlayerID: string) {  // fatto cos
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notebook));
     }
   }, [notebook]); //[notebook] dice a React "tieni d'occhio la variabile notebook"
-  
+
 
   // 3. Funzione Toggle semplificata
   // basta l'ID della carta
