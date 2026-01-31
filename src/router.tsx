@@ -31,6 +31,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import { getStoredCredentials, clearMatchCredentials } from './services/lobbyClient';
 import lobbyClient from './services/lobbyClient';
 import { getRoom } from './firebase/preLobby';
+import SupportPage from './pages/SupportPage';
 
 
 // LOADERS
@@ -223,6 +224,10 @@ export const router = createBrowserRouter([
       {
         path: 'leaderboard',
         element: <LeaderboardPage />,
+      },
+      {
+        path: 'help',
+        element: <SupportPage />,
       },
     ],
   },

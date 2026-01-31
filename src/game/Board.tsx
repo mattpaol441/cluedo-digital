@@ -13,7 +13,7 @@ import {
 import Cell from "./Cell";
 import Pawn from "./Pawn";
 
-import boardBg from "../assets/board/cluedo-board.jpg";
+import boardBg from "../assets/board/cluedo-board.png";
 
 // Funzione helper che, dati x e y, restituisce una stringa “x,y”. Serve come chiave unica per identificare ogni cella della plancia.
 const getCoordKey = (x: number, y: number) => `${x},${y}`;

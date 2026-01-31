@@ -12,7 +12,6 @@ import { // "Attrezzi" per l'autenticazione
   signInWithEmailAndPassword,
   signOut,
   updateEmail as firebaseUpdateEmail,
-  verifyBeforeUpdateEmail, // Per inviare mail di verifica
   updateProfile as updateAuthProfile, // Rinominato per ricordarci che aggiorna il profilo del "buttafuori" (Auth), non quello del database.
   onAuthStateChanged,
   type User
