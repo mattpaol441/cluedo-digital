@@ -13,21 +13,24 @@ interface DiceRollerProps {
 const DiceRoller: React.FC<DiceRollerProps> = ({ G, ctx, moves, playerID }) => {
     const isMyTurn = ctx.currentPlayer === playerID; // True se é il turno del giocatore corrente
     const hasRolled = G.diceRoll[0] !== 0 && G.diceRoll[1] !== 0; // True se i dadi sono già stati lanciati (entrambi diversi da zero)
+    const myPlayer = playerID ? G.players[playerID] : null;
+    const wasTeleported = myPlayer?.wasMovedBySuggestion && !myPlayer?.enteredManually; // True se sono stato teletrasportato
 
     // Se non è il tuo turno, oppure hai già tirato i dadi, il componente non renderizza nulla (return null)
     if (!isMyTurn) return null;
     if (hasRolled) return null;
+    if (wasTeleported) return null; // Se sono stato teletrasportato, posso scegliere senza tirare
 
     return (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      
+
             <div className="bg-white p-8 rounded-2xl shadow-2xl text-center animate-bounce-in border-4 border-slate-800">
                 <h2 className="text-2xl font-bold text-slate-800 mb-2">È il tuo turno!</h2>
                 <p className="text-slate-500 mb-6">Devi tirare i dadi per muoverti.</p>
 
                 <button
-                onClick={() => moves.rollDice()} // Al click viene chiamata la mossa rollDice() (invio al backend)
-                className="
+                    onClick={() => moves.rollDice()} // Al click viene chiamata la mossa rollDice() (invio al backend)
+                    className="
                     group relative
                     bg-red-600 hover:bg-red-700 text-white 
                     font-bold text-xl py-4 px-10 rounded-full 
@@ -35,12 +38,12 @@ const DiceRoller: React.FC<DiceRollerProps> = ({ G, ctx, moves, playerID }) => {
                     transition-all duration-150 flex items-center gap-3 mx-auto
                 "
                 >
-                <Dices className="w-8 h-8 group-hover:rotate-180 transition-transform duration-500" />
-                LANCIA I DADI
+                    <Dices className="w-8 h-8 group-hover:rotate-180 transition-transform duration-500" />
+                    LANCIA I DADI
                 </button>
             </div>
 
-            </div>
+        </div>
     );
 };
 
