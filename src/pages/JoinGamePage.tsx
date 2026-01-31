@@ -91,14 +91,6 @@ const JoinGamePage: React.FC = () => {
                     </div>
                 )}
 
-                {/* Quick link to go back */}
-                <button
-                    onClick={() => navigate('/home')}
-                    className="mt-8 text-slate-500 text-sm hover:text-white transition-colors underline decoration-slate-700 underline-offset-4"
-                    disabled={isJoining}
-                >
-                    Torna alla Home
-                </button>
 
             </main>
 

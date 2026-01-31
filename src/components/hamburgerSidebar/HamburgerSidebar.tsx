@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Menu, X, Home, Users, Settings, LogOut,
     HelpCircle, Trophy, Plus, Gamepad2,
-    Bell
+    Bell, ArrowLeft
 } from 'lucide-react';
 import { useAppDispatch } from '../../store/hooks';
 import { logoutUser } from '../../store/slices/userSlice';
@@ -35,7 +35,11 @@ interface HamburgerSidebarProps {
 const HamburgerSidebar: React.FC<HamburgerSidebarProps> = ({ user, notificationCount = 0 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const dispatch = useAppDispatch();
+
+    // Nascondi il pulsante Back se siamo sulla Home
+    const isOnHome = location.pathname === '/' || location.pathname === '/home';
 
     // Funzione interna per gestire il click: naviga e chiude il menu
     const handleNavigation = (path: string) => {
@@ -64,15 +68,30 @@ const HamburgerSidebar: React.FC<HamburgerSidebarProps> = ({ user, notificationC
             {/* 1. HAMBURGER BUTTON (Visible only when closed) */}
             {/* Positioned fixed at top left */}
             {!isOpen && (
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="fixed top-4 left-4 z-40 p-3 bg-slate-800 text-white rounded-lg shadow-lg hover:bg-slate-700 transition-colors border border-slate-700 relative"
-                    aria-label="Apri Menu"
-                >
-                    <Menu className="w-6 h-6" />
-                    {/* Badge sul pulsante hamburger */}
-                    <NotificationBadge count={notificationCount} className="-top-1 -right-1" />
-                </button>
+                <div className="fixed top-4 left-4 z-40 flex gap-2">
+                    {/* Hamburger Menu Button */}
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="p-3 bg-slate-800 text-white rounded-lg shadow-lg hover:bg-slate-700 transition-colors border border-slate-700 relative"
+                        aria-label="Apri Menu"
+                    >
+                        <Menu className="w-6 h-6" />
+                        {/* Badge sul pulsante hamburger */}
+                        <NotificationBadge count={notificationCount} className="-top-1 -right-1" />
+                    </button>
+
+                    {/* Back Button - nascosto sulla Home */}
+                    {!isOnHome && (
+                        <button
+                            onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/home')}
+                            className="p-3 bg-slate-800 text-white rounded-lg shadow-lg hover:bg-slate-700 transition-colors border border-slate-700"
+                            aria-label="Torna indietro"
+                            title="Torna indietro"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                    )}
+                </div>
             )}
 
             {/* 2. DARK OVERLAY (Click outside to close) */}
