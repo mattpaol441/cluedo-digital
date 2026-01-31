@@ -1,10 +1,11 @@
 import React from 'react';
 import { useAppSelector } from '../store/hooks';
-import { Github, Linkedin, Mail, Code2, Bug, BookOpen } from 'lucide-react';
+import { Github, Linkedin, Mail, Code2, Bug, BookOpen, HamburgerIcon } from 'lucide-react';
 
 // Componenti riutilizzabili dell'app
-import HamburgerSidebar from '../components/hamburgerSidebar/HamburgerSidebar';
+// import HamburgerSidebar from '../components/hamburgerSidebar/HamburgerSidebar';
 import ProfileView from '../components/ProfileView'; // Riutilizziamo il tuo componente!
+import HamburgerWithNotifications from 'src/components/hamburgerSidebar/HamburgerWithNotifications';
 
 // --- DATI STATICI (CONFIGURAZIONE) ---
 
@@ -58,18 +59,18 @@ const FAQS = [
 
 const TeamCard: React.FC<{ member: typeof TEAM_MEMBERS[0] }> = ({ member }) => (
     <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 flex flex-col items-center gap-4 hover:border-yellow-500 transition-colors group">
-        <ProfileView 
-            name={member.name} 
-            imageUrl={member.avatar} 
-            size="large" 
-            layout="vertical" 
+        <ProfileView
+            name={member.name}
+            imageUrl={member.avatar}
+            size="large"
+            layout="vertical"
             variant="game" // Usiamo la variante game per dare coerenza
             isActive={false}
         />
         <div className="text-center">
             <p className="text-yellow-500 font-bold text-sm tracking-widest uppercase">{member.role}</p>
         </div>
-        
+
         {/* Social Links */}
         <div className="flex gap-4 mt-2">
             <a href={member.github} className="text-slate-400 hover:text-white transition-colors"><Github className="w-5 h-5" /></a>
@@ -98,19 +99,19 @@ const TechBadge: React.FC<{ label: string }> = ({ label }) => (
 
 const SupportPage: React.FC = () => {
     const user = useAppSelector(state => state.user);
-    
-        // User data from Redux
-        const currentUser = {
-            displayName: user.displayName,
-            avatar: user.avatarUrl,
-            isOnline: user.isOnline
-        };
+
+    // User data from Redux
+    const currentUser = {
+        displayName: user.displayName,
+        avatar: user.avatarUrl,
+        isOnline: user.isOnline
+    };
 
     return (
         <div className="min-h-screen bg-slate-950 text-white flex flex-col relative overflow-x-hidden">
-            
+
             {/* Sidebar di Navigazione */}
-            <HamburgerSidebar user={currentUser} />
+            <HamburgerWithNotifications user={currentUser} />
 
             {/* Background Decorativo */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-yellow-500/5 rounded-full blur-[100px] pointer-events-none" />
@@ -142,7 +143,7 @@ const SupportPage: React.FC = () => {
                         {TEAM_MEMBERS.map(member => (
                             <TeamCard key={member.id} member={member} />
                         ))}
-                        
+
                     </div>
                 </section>
 
@@ -156,7 +157,7 @@ const SupportPage: React.FC = () => {
 
                 {/* SEZIONE 3: FAQ & SUPPORTO */}
                 <section className="grid md:grid-cols-2 gap-12 animate-fade-in-up delay-300">
-                    
+
                     {/* FAQ Column */}
                     <div>
                         <h3 className="text-2xl font-bold text-white mb-6">Domande Frequenti</h3>
@@ -172,11 +173,11 @@ const SupportPage: React.FC = () => {
                         <div>
                             <h3 className="text-2xl font-bold text-white mb-2">Hai trovato un Bug? 🐛</h3>
                             <p className="text-slate-400 mb-6">
-                                Essendo una versione beta, potresti incontrare degli errori imprevisti. 
+                                Essendo una versione beta, potresti incontrare degli errori imprevisti.
                                 Aiutaci a migliorare segnalandoli.
                             </p>
                         </div>
-                        
+
                         <div className="space-y-4">
                             <button className="w-full py-4 bg-red-900/20 text-red-400 border border-red-900/50 hover:bg-red-900/40 rounded-lg font-bold flex items-center justify-center gap-2 transition-all">
                                 <Bug className="w-5 h-5" />
