@@ -11,7 +11,7 @@ const Cell: React.FC<CellDefinition> = ({ x, y, type, doorTo, startForSuspect, o
             // 1. relative: FONDAMENTALE. Costringe la pedina a stare dentro questo div.
             // 2. flex-1: Si allarga per riempire lo spazio nella riga (nuovo layout Board).
             className={`
-                /* 1. STRUTTURA (Nostra Logica) */
+                /* 1. STRUTTURA */
                 relative                  /* FONDAMENTALE per le pedine */
                 w-full h-full             /* Occupa tutta la cella della griglia */
                 flex items-center justify-center
@@ -19,7 +19,7 @@ const Cell: React.FC<CellDefinition> = ({ x, y, type, doorTo, startForSuspect, o
                 /* 2. INTERATTIVITÀ */
                 ${!isInteractive ? 'pointer-events-none' : ''}
                 
-                /* 3. ESTETICA (Logica del Collega) */
+                /* 3. ESTETICA */
                 /* Usiamo il suo stile rosso pulsante per coerenza con il resto del suo design */
                 ${isHighlighted 
                     ? 'bg-red-400/60 cursor-pointer shadow-[inset_0_0_10px_rgba(250,204,21,0.6)] animate-pulse hover:bg-red-400/80' 
@@ -27,7 +27,7 @@ const Cell: React.FC<CellDefinition> = ({ x, y, type, doorTo, startForSuspect, o
                 }
             `}
             
-            // Manteniamo il posizionamento esplicito grid del collega per sicurezza
+            // Manteniamo il posizionamento esplicito grid per sicurezza
             style={{
                 gridColumnStart: x + 1,
                 gridRowStart: y + 1,
@@ -39,7 +39,7 @@ const Cell: React.FC<CellDefinition> = ({ x, y, type, doorTo, startForSuspect, o
             {/* Le Pedine vengono renderizzate qui */}
             {children}
 
-            {/* DECORAZIONE DEL COLLEGA: Pallino rosso centrale se evidenziato */}
+            {/* DECORAZIONE: Pallino rosso centrale se evidenziato */}
             {isHighlighted && (
                 <div className="w-3 h-3 bg-red-500 rounded-full shadow-glow absolute pointer-events-none opacity-80" />
             )}
