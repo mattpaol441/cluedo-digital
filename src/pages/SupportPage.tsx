@@ -1,6 +1,9 @@
 import React from 'react';
 import { useAppSelector } from '../store/hooks';
-import { Github, Linkedin, Mail, Code2, Bug, BookOpen, HamburgerIcon } from 'lucide-react';
+import {
+    Github, Linkedin, Mail, Code2, Bug, BookOpen,
+    // HamburgerIcon 
+} from 'lucide-react';
 
 // Componenti riutilizzabili dell'app
 // import HamburgerSidebar from '../components/hamburgerSidebar/HamburgerSidebar';
